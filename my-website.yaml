@@ -28,5 +28,5 @@ spec:
   app: my-website
  ports:
   - protocol: TCP
-    ports: 80
+    port: 80
     targetPort: 80
