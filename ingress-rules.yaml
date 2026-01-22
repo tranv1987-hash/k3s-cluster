@@ -17,14 +17,3 @@ spec:
         name: my-website-service
         port:
          number: 8080
- - host: argo.192.168.1.4.nip.io
-   http:
-    paths:
-    - path: /
-      pathType: Prefix
-      backend:
-       service:
-        name: argocd-server
-        namespace: argocd
-        port:
-         number: 443
