@@ -2,6 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
  name: my-ingress-rules
+ annotations:
+  nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
  ingressClassName: nginx
  rules:
@@ -15,3 +17,14 @@ spec:
         name: my-website-service
         port:
          number: 8080
+ - host: argo.192.168.1.4.nip.io
+   http:
+    paths:
+    - path: /
+      pathType: Prefix
+      backend:
+       service:
+        name: argocd-server
+        namespace: argocd
+        port:
+         number: 443
