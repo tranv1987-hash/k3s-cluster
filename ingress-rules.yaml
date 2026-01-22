@@ -1,0 +1,17 @@
+apiVersion: network.k8s.io/v1
+kind: Ingress
+metadata:
+ name: my-ingress-rules
+spec:
+ ingressClassName: nginx
+ rules:
+ - host: website.192.168.1.4.nip.io
+   http:
+    paths:
+    - path: /
+      pathType: Prefix
+      backend:
+       service:
+        name: my-website-service
+        port:
+         number: 8080
