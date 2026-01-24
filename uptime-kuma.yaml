@@ -6,7 +6,7 @@ metadata:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
- name: uptime-kume-pvc
+ name: uptime-kuma-pvc
  namespace: uptime-kuma
 spec:
  accessModes:
@@ -33,7 +33,7 @@ spec:
   spec:
    containers:
    - name: uptime-kuma
-     image: louislam/uptime:1
+     image: louislam/uptime-kuma:1
      ports:
      - containerPort: 3001
      volumeMounts:
