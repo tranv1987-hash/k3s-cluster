@@ -61,8 +61,14 @@ kind: Ingress
 metadata:
  name: uptime-kuma-ingress
  namespace: uptime-kuma
+ annotations:
+   cert-manager.io/cluster-issuer: selfsigned-issuer
 spec:
  ingressClassName: nginx
+ tls:
+ - hosts:
+   - uptime.192.168.1.4.nip.io
+   secretName: uptime-kuma-tls-secret
  rules:
  - host: uptime.192.168.1.4.nip.io
    http:
