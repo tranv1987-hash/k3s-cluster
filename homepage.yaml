@@ -12,7 +12,6 @@ metadata:
   name: homepage-config
   namespace: homepage
 data:
-  # File 1: General Settings
   settings.yaml: |
     title: Tran's Home Lab
     background: https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop
@@ -20,7 +19,6 @@ data:
     theme: dark
     color: slate
 
-  # File 2: The Links (Services)
   services.yaml: |
     - Management:
         - Uptime Kuma:
@@ -32,14 +30,12 @@ data:
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
 
-  # File 3: Widgets (System Info)
   widgets.yaml: |
     - resources:
         cpu: true
         memory: true
         disk: true
 
-  # File 4: Bookmarks (Optional)
   bookmarks.yaml: |
     - Developer:
         - GitHub:
@@ -70,24 +66,18 @@ spec:
         image: ghcr.io/gethomepage/homepage:latest
         ports:
         - containerPort: 3000
-
-        # FIX 1: Tell the app to allow your specific URL (or all URLs with "*")
         env:
-        - name HOMEPAGE_ALLOWED_HOSTS
+        - name: HOMEPAGE_ALLOWED_HOSTS
           value: "*"
-
         volumeMounts:
         - name: config
-          mountPath: /app/config  # We inject the files here
-        # FIX 2: Give the app a witable folder for its logs
+          mountPath: /app/config
         - name: logs
           mountPath: /app/config/logs
-
       volumes:
       - name: config
         configMap:
-          name: homepage-config   # From the ConfigMap above
-        # FIX 2 (Continued): Create the temporary empty volume for logs
+          name: homepage-config
       - name: logs
         emptyDir: {}
 
@@ -113,7 +103,7 @@ metadata:
   name: homepage-ingress
   namespace: homepage
   annotations:
-    cert-manager.io/cluster-issuer: selfsigned-issuer # Use the robot for SSL
+    cert-manager.io/cluster-issuer: selfsigned-issuer
 spec:
   ingressClassName: nginx
   tls:
