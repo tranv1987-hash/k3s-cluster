@@ -11,7 +11,7 @@ metadata:
 data:
   settings.yaml: |
     title: Home Lab
-    # Removed the background image for a clean, professional dark look
+    background: "#0f172a"
     cardBlur: sm
     theme: dark
     color: slate
@@ -26,7 +26,7 @@ data:
             href: https://uptime.192.168.1.4.nip.io
             description: Network Monitor
         - ArgoCD:
-            icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argocd.png
+            icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/argocd.svg
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
   widgets.yaml: |
@@ -56,7 +56,6 @@ spec:
       labels:
         app: homepage
     spec:
-      # 1. The Helper Robot (Runs once at startup)
       initContainers:
       - name: copy-config
         image: busybox
@@ -66,8 +65,6 @@ spec:
           mountPath: /config-source
         - name: config
           mountPath: /app/config
-
-      # 2. The Main App
       containers:
       - name: homepage
         image: ghcr.io/gethomepage/homepage:latest
@@ -79,15 +76,12 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /app/config
-      
-      # 3. The Volumes
       volumes:
-      - name: config-source        # The Read-Only ConfigMap
+      - name: config-source
         configMap:
           name: homepage-config
-      - name: config               # The Writable Empty Drive
+      - name: config
         emptyDir: {}
-
 ---
 apiVersion: v1
 kind: Service
