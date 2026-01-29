@@ -70,13 +70,26 @@ spec:
         image: ghcr.io/gethomepage/homepage:latest
         ports:
         - containerPort: 3000
+
+        # FIX 1: Tell the app to allow your specific URL (or all URLs with "*")
+        env:
+        - name HOMEPAGE_ALLOWED_HOSTS
+          value: "*"
+
         volumeMounts:
         - name: config
           mountPath: /app/config  # We inject the files here
+        # FIX 2: Give the app a witable folder for its logs
+        - name: logs
+          mountPath: /app/config/logs
+
       volumes:
       - name: config
         configMap:
           name: homepage-config   # From the ConfigMap above
+        # FIX 2 (Continued): Create the temporary empty volume for logs
+      - name: logs
+        emptyDir: {}
 
 ---
 # -------------------
