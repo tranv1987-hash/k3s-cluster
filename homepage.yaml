@@ -11,18 +11,22 @@ metadata:
 data:
   settings.yaml: |
     title: Home Lab
-    background: https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop
+    # Removed the background image for a clean, professional dark look
     cardBlur: sm
     theme: dark
     color: slate
+    layout:
+      Management:
+        style: row
+        columns: 2
   services.yaml: |
     - Management:
         - Uptime Kuma:
-            icon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/png/uptime-kuma.png
+            icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png
             href: https://uptime.192.168.1.4.nip.io
             description: Network Monitor
         - ArgoCD:
-            icon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/png/argocd.png
+            icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argocd.png
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
   widgets.yaml: |
