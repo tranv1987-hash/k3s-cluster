@@ -26,8 +26,8 @@ data:
             href: https://uptime.192.168.1.4.nip.io
             description: Network Monitor
         - ArgoCD:
-            # FIX: Using the official GitHub Avatar (Guaranteed to load)
-            icon: https://avatars.githubusercontent.com/u/35293425?s=200&v=4
+            # FIX: Official CNCF Artwork Repository (The Orange Octopus)
+            icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/argo/icon/color/argo-icon-color.png
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
   widgets.yaml: |
