@@ -3,9 +3,6 @@ kind: Namespace
 metadata:
   name: homepage
 ---
-# -------------------
-# CONFIGURATION
-# -------------------
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,12 +10,11 @@ metadata:
   namespace: homepage
 data:
   settings.yaml: |
-    title: Tran's Home Lab
+    title: Home Lab
     background: https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop
     cardBlur: sm
     theme: dark
     color: slate
-
   services.yaml: |
     - Management:
         - Uptime Kuma:
@@ -29,23 +25,17 @@ data:
             icon: argocd.png
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
-
   widgets.yaml: |
     - resources:
         cpu: true
         memory: true
         disk: true
-
   bookmarks.yaml: |
     - Developer:
         - GitHub:
             - abbr: GH
               href: https://github.com/
-
 ---
-# -------------------
-# THE APPLICATION
-# -------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -80,11 +70,7 @@ spec:
           name: homepage-config
       - name: logs
         emptyDir: {}
-
 ---
-# -------------------
-# NETWORKING
-# -------------------
 apiVersion: v1
 kind: Service
 metadata:
