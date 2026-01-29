@@ -26,17 +26,14 @@ data:
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
   widgets.yaml: |
-    - resources:
-        cpu: true
-        memory: true
-        disk: true
+    - greeting:
+        text_size: xl
+        text: "Welcome Home, Tran."
   bookmarks.yaml: |
     - Developer:
         - GitHub:
             - abbr: GH
               href: https://github.com/
-  kubernetes.yaml: |
-    mode: cluster
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -53,6 +50,18 @@ spec:
       labels:
         app: homepage
     spec:
+      # 1. The Helper Robot (Runs once at startup)
+      initContainers:
+      - name: copy-config
+        image: busybox
+        command: ['sh', '-c', 'cp /config-source/* /app/config/']
+        volumeMounts:
+        - name: config-source
+          mountPath: /config-source
+        - name: config
+          mountPath: /app/config
+
+      # 2. The Main App
       containers:
       - name: homepage
         image: ghcr.io/gethomepage/homepage:latest
@@ -64,14 +73,15 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /app/config
-        - name: logs
-          mountPath: /app/config/logs
+      
+      # 3. The Volumes
       volumes:
-      - name: config
+      - name: config-source        # The Read-Only ConfigMap
         configMap:
           name: homepage-config
-      - name: logs
+      - name: config               # The Writable Empty Drive
         emptyDir: {}
+
 ---
 apiVersion: v1
 kind: Service
