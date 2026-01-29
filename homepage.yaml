@@ -35,6 +35,8 @@ data:
         - GitHub:
             - abbr: GH
               href: https://github.com/
+  kubernetes.yaml: |
+    mode: cluster
 ---
 apiVersion: apps/v1
 kind: Deployment
