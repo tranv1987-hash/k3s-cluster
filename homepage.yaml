@@ -30,6 +30,15 @@ data:
             icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/argo/icon/color/argo-icon-color.png
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
+    - Network:
+        Pi-hole:
+            icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pihole.png
+            href: http://192.168.1.68/admin/
+            description: Ad Blocker
+            widget:
+             type: pihole
+             url: http://192.168.1.68/
+             key: b4QiRTw+T45kvG6KDnOUpFYK2lJzujgN3WQ54ZLYcQ0=
   widgets.yaml: |
     - greeting:
         text_size: xl
