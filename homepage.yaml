@@ -19,6 +19,9 @@ data:
       Management:
         style: row
         columns: 2
+      Network:
+        style: row
+        columns: 2
   services.yaml: |
     - Management:
         - Uptime Kuma:
@@ -26,7 +29,6 @@ data:
             href: https://uptime.192.168.1.4.nip.io
             description: Network Monitor
         - ArgoCD:
-            # FIX: Official CNCF Artwork Repository (The Orange Octopus)
             icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/argo/icon/color/argo-icon-color.png
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
@@ -36,9 +38,9 @@ data:
             href: http://192.168.1.68/admin/
             description: Ad Blocker
             widget:
-              type: pihole
-              url: http://192.168.1.68
-              key: "b4QiRTw+T45kvG6KDnOUpFYK2lJzujgN3WQ54ZLYcQ0="
+                type: pihole
+                url: http://192.168.1.68
+                key: "b4QiRTw+T45kvG6KDnOUpFYK2lJzujgN3WQ54ZLYcQ0="
   widgets.yaml: |
     - greeting:
         text_size: xl
