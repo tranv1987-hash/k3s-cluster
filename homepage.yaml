@@ -34,7 +34,8 @@ data:
             description: GitOps Controller
     - Network:
         - Pi-hole:
-            icon: https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Pi-hole_logo.svg/512px-Pi-hole_logo.svg.png
+            # FIX: Using internal MDI icon (Zero chance of broken link)
+            icon: mdi-dns
             href: http://192.168.1.68/admin/
             description: Ad Blocker
   widgets.yaml: |
