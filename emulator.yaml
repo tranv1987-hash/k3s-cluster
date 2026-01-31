@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: arcade
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emulatorjs
+  namespace: arcade
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emulatorjs
+  template:
+    metadata:
+      labels:
+        app: emulatorjs
+    spec:
+      nodeName: pi-master-0
+      containers:
+      - name: emulatorjs
+        image: linuxserver/emulatorjs:latest
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/Chicago"
+        ports:
+        - containerPort: 3000
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: roms
+          mountPath: /data
+      volumes:
+      - name: config
+        hostPath:
+          path: /home/tranv/emulator-config
+      - name: roms
+        hostPath:
+          path: /home/tranv/roms
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emulatorjs-service
+  namespace: arcade
+spec:
+  selector:
+    app: emulatorjs
+  ports:
+  - name: admin
+    port: 3000
+    targetPort: 3000
+  - name: play
+    port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: emulatorjs-ingress
+  namespace: arcade
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: admin.emulator.192.168.1.4.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: emulatorjs-service
+            port:
+              number: 3000
+  - host: play.emulator.192.168.1.4.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: emulatorjs-service
+            port:
+              number: 80
