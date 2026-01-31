@@ -29,12 +29,12 @@ data:
             href: https://uptime.192.168.1.4.nip.io
             description: Network Monitor
         - ArgoCD:
-            icon: argocd.png
+            icon: argo-cd.png
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
     - Network:
         - Pi-hole:
-            icon: pihole.png
+            icon: pi-hole.png
             href: http://192.168.1.68/admin/
             description: Ad Blocker
   widgets.yaml: |
@@ -67,7 +67,7 @@ spec:
       initContainers:
       - name: setup-files
         image: busybox
-        # TRICK: Copy config AND download icons to local storage
+        # TRICK: Copy config AND download icons (Fixed Filenames!)
         command: 
           - 'sh'
           - '-c'
@@ -75,9 +75,10 @@ spec:
             cp /config-source/* /app/config/
             mkdir -p /app/config/icons
             echo "Downloading icons..."
+            # FIX: Added dashes to filenames (argo-cd.png and pi-hole.png)
             wget -q --no-check-certificate -O /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png
-            wget -q --no-check-certificate -O /app/config/icons/argocd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argocd.png
-            wget -q --no-check-certificate -O /app/config/icons/pihole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pihole.png
+            wget -q --no-check-certificate -O /app/config/icons/argo-cd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argo-cd.png
+            wget -q --no-check-certificate -O /app/config/icons/pi-hole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png
         volumeMounts:
         - name: config-source
           mountPath: /config-source
