@@ -27,8 +27,6 @@ spec:
         env:
         - name: ROMM_AUTH_SECRET_KEY
           value: "MySuperSecretKey123!"
-        - name: DB_HOST
-          value: "sqlite"
         volumeMounts:
         # FIX 1: Mount ROMs to the internal library folder
         - name: roms
