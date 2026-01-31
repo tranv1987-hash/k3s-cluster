@@ -25,17 +25,16 @@ data:
   services.yaml: |
     - Management:
         - Uptime Kuma:
-            icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png
+            icon: uptime-kuma.png
             href: https://uptime.192.168.1.4.nip.io
             description: Network Monitor
         - ArgoCD:
-            icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/argo/icon/color/argo-icon-color.png
+            icon: argocd.png
             href: https://argocd.192.168.1.4.nip.io
             description: GitOps Controller
     - Network:
         - Pi-hole:
-            # FIX: Using internal MDI icon (Zero chance of broken link)
-            icon: mdi-dns
+            icon: pihole.png
             href: http://192.168.1.68/admin/
             description: Ad Blocker
   widgets.yaml: |
@@ -66,9 +65,19 @@ spec:
         app: homepage
     spec:
       initContainers:
-      - name: copy-config
+      - name: setup-files
         image: busybox
-        command: ['sh', '-c', 'cp /config-source/* /app/config/']
+        # TRICK: Copy config AND download icons to local storage
+        command: 
+          - 'sh'
+          - '-c'
+          - |
+            cp /config-source/* /app/config/
+            mkdir -p /app/config/icons
+            echo "Downloading icons..."
+            wget -q --no-check-certificate -O /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png
+            wget -q --no-check-certificate -O /app/config/icons/argocd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argocd.png
+            wget -q --no-check-certificate -O /app/config/icons/pihole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pihole.png
         volumeMounts:
         - name: config-source
           mountPath: /config-source
