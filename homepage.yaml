@@ -66,8 +66,8 @@ spec:
     spec:
       initContainers:
       - name: setup-files
-        # FIX: Using a dedicated curl image (Has proper SSL certs)
-        image: curlimages/curl
+        image: busybox
+        # FIX: Runs as root (fixes 503). Includes "|| true" (prevents crashes).
         command: 
           - 'sh'
           - '-c'
@@ -75,9 +75,10 @@ spec:
             cp /config-source/* /app/config/
             mkdir -p /app/config/icons
             echo "Downloading icons..."
-            curl -L -o /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png
-            curl -L -o /app/config/icons/argo-cd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argo-cd.png
-            curl -L -o /app/config/icons/pi-hole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png
+            wget -q --no-check-certificate -O /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png || true
+            wget -q --no-check-certificate -O /app/config/icons/argo-cd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argo-cd.png || true
+            wget -q --no-check-certificate -O /app/config/icons/pi-hole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png || true
+            ls -la /app/config/icons
         volumeMounts:
         - name: config-source
           mountPath: /config-source
