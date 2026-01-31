@@ -6,86 +6,75 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: emulatorjs
+  name: romm
   namespace: arcade
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: emulatorjs
+      app: romm
   template:
     metadata:
       labels:
-        app: emulatorjs
+        app: romm
     spec:
       nodeName: pi-master-0
       containers:
-      - name: emulatorjs
-        image: ghcr.io/linuxserver/emulatorjs:latest
-        env:
-        - name: PUID
-          value: "1000"
-        - name: PGID
-          value: "1000"
-        - name: TZ
-          value: "America/Chicago"
+      - name: romm
+        image: rommapp/romm:latest
         ports:
-        - containerPort: 3000
-        - containerPort: 80
+        - containerPort: 8080
+        env:
+        - name: ROMM_AUTH_SECRET_KEY
+          value: "MySuperSecretKey123!" # Required for login
+        - name: DB_HOST
+          value: "sqlite"
         volumeMounts:
+        - name: roms
+          mountPath: /roms
         - name: config
           mountPath: /config
-        - name: roms
-          mountPath: /data
+        - name: assets
+          mountPath: /romm/assets
       volumes:
-      - name: config
-        hostPath:
-          path: /home/tranv/emulator-config
       - name: roms
         hostPath:
           path: /home/tranv/roms
+      - name: config
+        hostPath:
+          path: /home/tranv/romm-config
+      - name: assets
+        hostPath:
+          path: /home/tranv/romm-config/assets
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: emulatorjs-service
+  name: romm-service
   namespace: arcade
 spec:
   selector:
-    app: emulatorjs
+    app: romm
   ports:
-  - name: admin
-    port: 3000
-    targetPort: 3000
-  - name: play
-    port: 80
-    targetPort: 80
+  - name: web
+    port: 8080
+    targetPort: 8080
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: emulatorjs-ingress
+  name: romm-ingress
   namespace: arcade
 spec:
   ingressClassName: nginx
   rules:
-  - host: admin.emulator.192.168.1.4.nip.io
+  - host: play.192.168.1.4.nip.io
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: emulatorjs-service
+            name: romm-service
             port:
-              number: 3000
-  - host: play.emulator.192.168.1.4.nip.io
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: emulatorjs-service
-            port:
-              number: 80
+              number: 8080
