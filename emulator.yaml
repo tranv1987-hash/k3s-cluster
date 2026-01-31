@@ -21,7 +21,7 @@ spec:
       nodeName: pi-master-0
       containers:
       - name: emulatorjs
-        image: linuxserver/emulatorjs:latest
+        image: lscr.io/linuxserver/emulatorjs:latest
         env:
         - name: PUID
           value: "1000"
