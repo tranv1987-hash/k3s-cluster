@@ -34,7 +34,7 @@ data:
             description: GitOps Controller
     - Network:
         - Pi-hole:
-            icon: https://avatars.githubusercontent.com/u/15852932?s=200&v=4
+            icon: https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Pi-hole_logo.svg/512px-Pi-hole_logo.svg.png
             href: http://192.168.1.68/admin/
             description: Ad Blocker
   widgets.yaml: |
