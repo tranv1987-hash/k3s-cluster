@@ -66,8 +66,8 @@ spec:
     spec:
       initContainers:
       - name: setup-files
-        image: busybox
-        # TRICK: Copy config AND download icons (Fixed Filenames!)
+        # FIX: Using a dedicated curl image (Has proper SSL certs)
+        image: curlimages/curl
         command: 
           - 'sh'
           - '-c'
@@ -75,10 +75,9 @@ spec:
             cp /config-source/* /app/config/
             mkdir -p /app/config/icons
             echo "Downloading icons..."
-            # FIX: Added dashes to filenames (argo-cd.png and pi-hole.png)
-            wget -q --no-check-certificate -O /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png
-            wget -q --no-check-certificate -O /app/config/icons/argo-cd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argo-cd.png
-            wget -q --no-check-certificate -O /app/config/icons/pi-hole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png
+            curl -L -o /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png
+            curl -L -o /app/config/icons/argo-cd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argo-cd.png
+            curl -L -o /app/config/icons/pi-hole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png
         volumeMounts:
         - name: config-source
           mountPath: /config-source
