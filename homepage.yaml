@@ -37,6 +37,15 @@ data:
             icon: pi-hole.png
             href: http://192.168.1.68/admin/
             description: Ad Blocker
+    - Entertainment:
+        - NES Emulator:
+            icon: mdi-controller-classic
+            href: http://play.emulator.192.168.1.4.nip.io
+            description: Play Retro Games
+        - Game Manager:
+            icon: mdi-cog
+            href: http://admin.emulator.192.168.1.4.nip.io
+            description: Upload & Scan
   widgets.yaml: |
     - greeting:
         text_size: xl
