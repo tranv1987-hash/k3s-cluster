@@ -14,29 +14,6 @@ spec:
         app: nes
     spec:
       nodeName: pi-master-0
-      # 1. This "Init Container" downloads the emulator code before the server starts
-      initContainers:
-      - name: download-emulator
-        image: alpine:latest
-        command: ["/bin/sh", "-c"]
-        args:
-          - |
-            echo "Downloading EmulatorJS..."
-            # Install wget and unzip
-            apk add --no-cache wget unzip
-            # clear directory to be safe
-            rm -rf /data/*
-            # Download the latest release from the official repo
-            wget https://github.com/EmulatorJS/EmulatorJS/releases/download/v4.0.9/EmulatorJS-v4.0.9.zip -O /tmp/emu.zip
-            unzip /tmp/emu.zip -d /data
-            mv /data/EmulatorJS-v4.0.9/* /data/
-            rm -rf /data/EmulatorJS-v4.0.9
-            echo "Done!"
-        volumeMounts:
-        - name: web-root
-          mountPath: /data
-      
-      # 2. The Main Container just serves the files
       containers:
       - name: nes
         image: nginx:alpine
@@ -44,16 +21,14 @@ spec:
         - containerPort: 80
           name: http
         volumeMounts:
+        # 1. SERVES THE WEBSITE (From your new public folder)
         - name: web-root
           mountPath: /usr/share/nginx/html
-        - name: config
-          mountPath: /usr/share/nginx/html/config
+        # 2. SERVES THE ROMS (Maps your ROMs folder into the website)
         - name: roms
           mountPath: /usr/share/nginx/html/roms
       volumes:
       - name: web-root
-        emptyDir: {}
-      - name: config
         hostPath:
           path: /var/emu-web
       - name: roms
