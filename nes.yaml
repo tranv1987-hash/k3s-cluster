@@ -55,7 +55,7 @@ spec:
         emptyDir: {}
       - name: config
         hostPath:
-          path: /home/tranv/emulator-config
+          path: /var/emu-web
       - name: roms
         hostPath:
           path: /home/tranv/roms
