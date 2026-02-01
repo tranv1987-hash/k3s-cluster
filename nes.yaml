@@ -14,27 +14,45 @@ spec:
         app: nes
     spec:
       nodeName: pi-master-0
+      # 1. This "Init Container" downloads the emulator code before the server starts
+      initContainers:
+      - name: download-emulator
+        image: alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Downloading EmulatorJS..."
+            # Install wget and unzip
+            apk add --no-cache wget unzip
+            # clear directory to be safe
+            rm -rf /data/*
+            # Download the latest release from the official repo
+            wget https://github.com/EmulatorJS/EmulatorJS/releases/download/v4.0.9/EmulatorJS-v4.0.9.zip -O /tmp/emu.zip
+            unzip /tmp/emu.zip -d /data
+            mv /data/EmulatorJS-v4.0.9/* /data/
+            rm -rf /data/EmulatorJS-v4.0.9
+            echo "Done!"
+        volumeMounts:
+        - name: web-root
+          mountPath: /data
+      
+      # 2. The Main Container just serves the files
       containers:
       - name: nes
-        image: jshridha/emulatorjs:latest
-        env:
-        - name: PUID
-          value: "1000"
-        - name: PGID
-          value: "1000"
-        - name: TZ
-          value: "America/Chicago"
+        image: nginx:alpine
         ports:
         - containerPort: 80
-          name: player
-        - containerPort: 3000
-          name: manager
+          name: http
         volumeMounts:
+        - name: web-root
+          mountPath: /usr/share/nginx/html
         - name: config
-          mountPath: /var/www/html/config
+          mountPath: /usr/share/nginx/html/config
         - name: roms
-          mountPath: /data
+          mountPath: /usr/share/nginx/html/roms
       volumes:
+      - name: web-root
+        emptyDir: {}
       - name: config
         hostPath:
           path: /home/tranv/emulator-config
@@ -51,12 +69,9 @@ spec:
   selector:
     app: nes
   ports:
-  - name: player
+  - name: http
     port: 80
     targetPort: 80
-  - name: manager
-    port: 3000
-    targetPort: 3000
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -66,16 +81,6 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: nes-manage.192.168.1.4.nip.io
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: nes-service
-            port:
-              number: 3000
   - host: nes.192.168.1.4.nip.io
     http:
       paths:
