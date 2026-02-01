@@ -57,6 +57,8 @@ spec:
         # If Paper 1.21.11 doesn't exist yet, change this to "VANILLA"
         - name: TYPE
           value: "PAPER"
+        - name: ENABLE_QUERY
+          value: "TRUE"
         - name: MEMORY
           value: "2G"
         - name: MOTD
