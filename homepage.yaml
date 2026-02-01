@@ -87,8 +87,6 @@ spec:
             wget -q --no-check-certificate -O /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png || true
             wget -q --no-check-certificate -O /app/config/icons/argo-cd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argo-cd.png || true
             wget -q --no-check-certificate -O /app/config/icons/pi-hole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png || true
-            # NEW ICON DOWNLOAD
-            wget -q --no-check-certificate -O /app/config/icons/nes.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nes.png || true
             ls -la /app/config/icons
         volumeMounts:
         - name: config-source
