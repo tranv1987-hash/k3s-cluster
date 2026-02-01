@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nes
+  namespace: retro
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nes
+  template:
+    metadata:
+      labels:
+        app: nes
+    spec:
+      nodeName: pi-master-0
+      containers:
+      - name: nes
+        image: lscr.io/linuxserver/emulatorjs:latest
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/Chicago"
+        ports:
+        - containerPort: 80
+          name: player
+        - containerPort: 3000
+          name: manager
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: roms
+          mountPath: /data
+      volumes:
+      - name: config
+        hostPath:
+          path: /home/tranv/emulator-config
+      - name: roms
+        hostPath:
+          path: /home/tranv/roms
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nes-service
+  namespace: retro
+spec:
+  selector:
+    app: nes
+  ports:
+  - name: player
+    port: 80
+    targetPort: 80
+  - name: manager
+    port: 3000
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nes-ingress
+  namespace: retro
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: nes-manage.192.168.1.4.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nes-service
+            port:
+              number: 3000
+  - host: nes.192.168.1.4.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nes-service
+            port:
+              number: 80
