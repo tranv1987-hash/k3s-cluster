@@ -30,37 +30,18 @@ spec:
       labels:
         app: minecraft
     spec:
-      # 1. NEW: Force Google DNS to bypass local router issues
+      # 1. NETWORK: Keep the Google DNS fix so it can download files
       dnsPolicy: "None"
       dnsConfig:
         nameservers:
           - 8.8.8.8
           - 8.8.4.4
-
-      # 2. NEW: Alpine Downloader with Curl
-      initContainers:
-      - name: download-server
-        image: alpine:latest
-        command: ["sh", "-c"]
-        args:
-          - |
-            apk add --no-cache curl
-            echo "Resolving papermc.io..."
-            # Debug: show us what IP it finds
-            nslookup api.papermc.io
-            
-            echo "Downloading PaperMC..."
-            # Use the latest 1.20.4 build (496)
-            curl -L -k -o /data/server.jar https://api.papermc.io/v2/projects/paper/versions/1.21.4/builds/84/downloads/paper-1.21.4-84.jar
-            
-            chmod 777 /data/server.jar
-            echo "Download complete."
-        volumeMounts:
-        - name: data
-          mountPath: /data
-
+      
+      # 2. CLEANUP: No more "initContainer" manual download.
+      
       containers:
       - name: minecraft
+        # 3. JAVA: Ensure we use Java 21 for modern versions
         image: itzg/minecraft-server:java21
         imagePullPolicy: Always
         ports:
@@ -69,14 +50,17 @@ spec:
         env:
         - name: EULA
           value: "TRUE"
+        # 4. VERSION: Force it to match your client exactly
+        - name: VERSION
+          value: "1.21.11"
+        # 5. TYPE: Switch back to PAPER (It's faster on Pis). 
+        # If Paper 1.21.11 doesn't exist yet, change this to "VANILLA"
         - name: TYPE
-          value: "CUSTOM"
-        - name: CUSTOM_SERVER
-          value: "/data/server.jar"
+          value: "PAPER"
         - name: MEMORY
           value: "2G"
         - name: MOTD
-          value: "K8s Cluster Survival"
+          value: "Tran's Cluster Fortress"
         resources:
           requests:
             memory: "2Gi"
