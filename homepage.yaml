@@ -54,8 +54,7 @@ data:
             widget:
                 type: gamedig
                 game: minecraft
-                # REPLACE THIS with the 10.43.x.x IP you found in Step 1
-                server: 10.43.XX.XX
+                server: 10.43.194.142
                 port: 25565
   widgets.yaml: |
     - greeting:
