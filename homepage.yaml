@@ -22,6 +22,10 @@ data:
       Network:
         style: row
         columns: 2
+      # NEW SECTION
+      Gaming:
+        style: row
+        columns: 1
   services.yaml: |
     - Management:
         - Uptime Kuma:
@@ -37,6 +41,12 @@ data:
             icon: pi-hole.png
             href: http://192.168.1.68/admin/
             description: Ad Blocker
+    # NEW SERVICE
+    - Gaming:
+        - NES Emulator:
+            icon: nes.png
+            href: http://nes.192.168.1.4.nip.io
+            description: Retro Gaming
   widgets.yaml: |
     - greeting:
         text_size: xl
@@ -67,8 +77,7 @@ spec:
       initContainers:
       - name: setup-files
         image: busybox
-        # FIX: Runs as root (fixes 503). Includes "|| true" (prevents crashes).
-        command: 
+        command:
           - 'sh'
           - '-c'
           - |
@@ -78,6 +87,8 @@ spec:
             wget -q --no-check-certificate -O /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png || true
             wget -q --no-check-certificate -O /app/config/icons/argo-cd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argo-cd.png || true
             wget -q --no-check-certificate -O /app/config/icons/pi-hole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png || true
+            # NEW ICON DOWNLOAD
+            wget -q --no-check-certificate -O /app/config/icons/nes.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nes.png || true
             ls -la /app/config/icons
         volumeMounts:
         - name: config-source
