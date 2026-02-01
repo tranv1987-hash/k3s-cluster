@@ -53,8 +53,8 @@ data:
             description: "Survival Mode"
             widget:
                 type: minecraft
-                # CHANGE THIS: Use the hard IP, not the DNS name
-                server: 192.168.1.4
+                # The Internal K8s Address (Rock solid reliability)
+                server: minecraft-service.gaming.svc.cluster.local
                 port: 25565
   widgets.yaml: |
     - greeting:
