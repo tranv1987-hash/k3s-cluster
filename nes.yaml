@@ -16,7 +16,7 @@ spec:
       nodeName: pi-master-0
       containers:
       - name: nes
-        image: ghcr.io/linuxserver/emulatorjs:latest
+        image: jshridha/emulatorjs:latest
         env:
         - name: PUID
           value: "1000"
@@ -31,7 +31,7 @@ spec:
           name: manager
         volumeMounts:
         - name: config
-          mountPath: /config
+          mountPath: /var/www/html/config
         - name: roms
           mountPath: /data
       volumes:
