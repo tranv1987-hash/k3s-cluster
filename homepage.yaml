@@ -52,8 +52,8 @@ data:
             href: "#"
             description: "Survival Mode"
             widget:
-                type: minecraft
-                # The Internal K8s Address (Rock solid reliability)
+                type: gamedig           # <--- CHANGED from 'minecraft'
+                game: minecraft         # <--- NEW LINE
                 server: minecraft-service.gaming.svc.cluster.local
                 port: 25565
   widgets.yaml: |
