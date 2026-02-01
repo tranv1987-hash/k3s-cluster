@@ -51,6 +51,18 @@ data:
     - greeting:
         text_size: xl
         text: "Welcome Home, Tran."
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "cluster"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
   bookmarks.yaml: |
     - Developer:
         - GitHub:
