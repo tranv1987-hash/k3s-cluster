@@ -86,6 +86,7 @@ spec:
       labels:
         app: homepage
     spec:
+      serviceAccountName: homepage
       initContainers:
       - name: setup-files
         image: busybox
