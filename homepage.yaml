@@ -49,15 +49,12 @@ data:
             description: Retro Gaming
         - Minecraft Server:
             icon: minecraft.png
-            # This 'href' is where clicking the button takes you. 
-            # Since it's a game server, we can just link to a Dynmap if you had one, 
-            # or just put '#' to make it do nothing but show stats.
             href: "#"
             description: "Survival Mode"
             widget:
                 type: minecraft
-                # Use the IP of your Master Node (or whichever node handles the LoadBalancer)
-                server: minecraft-service.gaming.svc.cluster.local
+                # CHANGE THIS: Use the hard IP, not the DNS name
+                server: 192.168.1.4
                 port: 25565
   widgets.yaml: |
     - greeting:
