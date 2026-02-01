@@ -52,9 +52,10 @@ data:
             href: "#"
             description: "Survival Mode"
             widget:
-                type: gamedig           # <--- CHANGED from 'minecraft'
-                game: minecraft         # <--- NEW LINE
-                server: minecraft-service.gaming.svc.cluster.local
+                type: gamedig
+                game: minecraft
+                # REPLACE THIS with the 10.43.x.x IP you found in Step 1
+                server: 10.43.XX.XX
                 port: 25565
   widgets.yaml: |
     - greeting:
