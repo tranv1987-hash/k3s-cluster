@@ -57,7 +57,7 @@ data:
             widget:
                 type: minecraft
                 # Use the IP of your Master Node (or whichever node handles the LoadBalancer)
-                server: 192.168.1.4
+                server: minecraft-service.gaming.svc.cluster.local
                 port: 25565
   widgets.yaml: |
     - greeting:
