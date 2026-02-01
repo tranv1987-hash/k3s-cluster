@@ -52,7 +52,7 @@ data:
             href: "#"
             description: "Survival Mode"
             widget:
-                game: minecraft
+                type: minecraft
                 server: 10.43.194.142
                 port: 25565
   widgets.yaml: |
