@@ -16,7 +16,7 @@ spec:
       nodeName: pi-master-0
       containers:
       - name: nes
-        image: lscr.io/linuxserver/emulatorjs:latest
+        image: linuxserver/emulatorjs:latest
         env:
         - name: PUID
           value: "1000"
