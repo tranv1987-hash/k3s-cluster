@@ -30,31 +30,31 @@ spec:
       labels:
         app: minecraft
     spec:
-      # 1. NETWORK: Keep the Google DNS fix so it can download files
+      # Network Fix for Downloads
       dnsPolicy: "None"
       dnsConfig:
         nameservers:
           - 8.8.8.8
           - 8.8.4.4
-      
-      # 2. CLEANUP: No more "initContainer" manual download.
-      
       containers:
       - name: minecraft
-        # 3. JAVA: Ensure we use Java 21 for modern versions
         image: itzg/minecraft-server:java21
         imagePullPolicy: Always
         ports:
+        # 1. TCP for Playing
         - containerPort: 25565
           name: game
+          protocol: TCP
+        # 2. UDP for Stats (Homepage needs this!)
+        - containerPort: 25565
+          name: query
+          protocol: UDP
         env:
         - name: EULA
           value: "TRUE"
-        # 4. VERSION: Force it to match your client exactly
+        # 3. VERSION MATCH: Your screenshot says 1.21.1, so let's match it perfectly.
         - name: VERSION
-          value: "1.21.11"
-        # 5. TYPE: Switch back to PAPER (It's faster on Pis). 
-        # If Paper 1.21.11 doesn't exist yet, change this to "VANILLA"
+          value: "1.21.1"
         - name: TYPE
           value: "PAPER"
         - name: ENABLE_QUERY
@@ -88,6 +88,12 @@ spec:
     app: minecraft
   type: LoadBalancer
   ports:
+  # 4. EXPOSE BOTH PORTS IN THE SERVICE
   - port: 25565
     targetPort: 25565
     protocol: TCP
+    name: game
+  - port: 25565
+    targetPort: 25565
+    protocol: UDP
+    name: query
