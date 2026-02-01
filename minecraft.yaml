@@ -30,20 +30,35 @@ spec:
       labels:
         app: minecraft
     spec:
-      # 1. NEW: Init Container to Force Download the File
+      # 1. NEW: Force Google DNS to bypass local router issues
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
+
+      # 2. NEW: Alpine Downloader with Curl
       initContainers:
       - name: download-server
-        image: busybox
+        image: alpine:latest
         command: ["sh", "-c"]
         args:
           - |
-            echo "Downloading PaperMC manually..."
-            # Force download ignoring SSL (The --no-check-certificate flag is the magic)
-            wget --no-check-certificate -O /data/server.jar https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds/496/downloads/paper-1.20.4-496.jar
+            apk add --no-cache curl
+            echo "Resolving papermc.io..."
+            # Debug: show us what IP it finds
+            nslookup api.papermc.io
+            
+            echo "Downloading PaperMC..."
+            # Use the latest 1.20.4 build (496)
+            curl -L -k -o /data/server.jar https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds/496/downloads/paper-1.20.4-496.jar
+            
             chmod 777 /data/server.jar
+            echo "Download complete."
         volumeMounts:
         - name: data
           mountPath: /data
+
       containers:
       - name: minecraft
         image: itzg/minecraft-server:java17
@@ -54,7 +69,6 @@ spec:
         env:
         - name: EULA
           value: "TRUE"
-        # 2. CHANGE: Tell it we are providing our own file
         - name: TYPE
           value: "CUSTOM"
         - name: CUSTOM_SERVER
