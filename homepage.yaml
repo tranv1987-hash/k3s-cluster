@@ -44,7 +44,7 @@ data:
     # NEW SERVICE
     - Gaming:
         - NES Emulator:
-            icon: nes.png
+            icon: mdi-controller-classic
             href: http://nes.192.168.1.4.nip.io
             description: Retro Gaming
   widgets.yaml: |
