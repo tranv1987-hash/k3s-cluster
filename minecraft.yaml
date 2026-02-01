@@ -3,7 +3,6 @@ kind: Namespace
 metadata:
   name: gaming
 ---
-# 1. STORAGE: Keep your world safe if the pod restarts
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -16,7 +15,6 @@ spec:
     requests:
       storage: 5Gi
 ---
-# 2. THE SERVER: The actual game logic
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -32,9 +30,23 @@ spec:
       labels:
         app: minecraft
     spec:
+      # 1. NEW: Init Container to Force Download the File
+      initContainers:
+      - name: download-server
+        image: busybox
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo "Downloading PaperMC manually..."
+            # Force download ignoring SSL (The --no-check-certificate flag is the magic)
+            wget --no-check-certificate -O /data/server.jar https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds/496/downloads/paper-1.20.4-496.jar
+            chmod 777 /data/server.jar
+        volumeMounts:
+        - name: data
+          mountPath: /data
       containers:
       - name: minecraft
-        image: itzg/minecraft-server:latest
+        image: itzg/minecraft-server:java17
         imagePullPolicy: Always
         ports:
         - containerPort: 25565
@@ -42,20 +54,21 @@ spec:
         env:
         - name: EULA
           value: "TRUE"
+        # 2. CHANGE: Tell it we are providing our own file
         - name: TYPE
-          value: "PAPER"  # "Paper" is optimized for low-resource hardware like Pis
-        - name: VERSION
-          value: "1.20.4" # Pinning version is safer than "LATEST"
+          value: "CUSTOM"
+        - name: CUSTOM_SERVER
+          value: "/data/server.jar"
         - name: MEMORY
-          value: "2G"     # Leaves 2GB for the OS and K3s
+          value: "2G"
         - name: MOTD
           value: "K8s Cluster Survival"
         resources:
           requests:
             memory: "2Gi"
-            cpu: "1000m"  # Request 1 full core
+            cpu: "1000m"
           limits:
-            memory: "3Gi" # Hard cap so it doesn't crash the Pi
+            memory: "3Gi"
             cpu: "3000m"
         volumeMounts:
         - name: data
@@ -65,7 +78,6 @@ spec:
         persistentVolumeClaim:
           claimName: minecraft-data
 ---
-# 3. NETWORK: Open the port to your LAN
 apiVersion: v1
 kind: Service
 metadata:
@@ -74,7 +86,7 @@ metadata:
 spec:
   selector:
     app: minecraft
-  type: LoadBalancer # On K3s, this will expose it on the Node's IP
+  type: LoadBalancer
   ports:
   - port: 25565
     targetPort: 25565
