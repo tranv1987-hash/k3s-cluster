@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vpn
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wireguard-config
+  namespace: vpn
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wireguard
+  namespace: vpn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wireguard
+  template:
+    metadata:
+      labels:
+        app: wireguard
+    spec:
+      containers:
+      - name: wireguard
+        image: ghcr.io/wg-easy/wg-easy
+        securityContext:
+          # REQUIRED: WireGuard needs to control the network stack
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
+              - SYS_MODULE
+        env:
+          # The public address clients use to connect
+          - name: WG_HOST
+            value: "wireguard.vi3t-lab.com"  # <--- Your new Subdomain
+          - name: PASSWORD
+            valueFrom:                 # <--- CHANGED THIS BLOCK
+              secretKeyRef:
+                name: wireguard-secret
+                key: password
+          - name: WG_PORT
+            value: "51820"
+          - name: WG_DEFAULT_ADDRESS
+            value: "10.8.0.x"
+          - name: WG_DEFAULT_DNS
+            value: "1.1.1.1"
+        ports:
+        - containerPort: 51820
+          name: wireguard
+          protocol: UDP
+        - containerPort: 51821
+          name: web-ui
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/wireguard
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: wireguard-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wireguard-service
+  namespace: vpn
+spec:
+  selector:
+    app: wireguard
+  type: LoadBalancer
+  ports:
+    # The VPN Tunnel Port (UDP)
+    - port: 51820
+      targetPort: 51820
+      protocol: UDP
+      name: wireguard
+    # The Web Dashboard Port (TCP)
+    - port: 51821
+      targetPort: 51821
+      protocol: TCP
+      name: web-ui
