@@ -44,7 +44,7 @@ spec:
           # The public address clients use to connect
           - name: WG_HOST
             value: "wireguard.vi3t-lab.com"  # <--- Your new Subdomain
-          - name: PASSWORD
+          - name: PASSWORD_HASH
             valueFrom:                 # <--- CHANGED THIS BLOCK
               secretKeyRef:
                 name: wireguard-secret
