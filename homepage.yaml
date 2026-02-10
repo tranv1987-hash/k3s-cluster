@@ -55,6 +55,11 @@ data:
                 type: minecraft
                 server: 10.43.194.142
                 port: 25565
+    - Infrastructure:
+        - WireGuard VPN:
+            icon: wireguard.png
+            href: "http://192.168.1.4:51821" # Replace X with your Pi's IP
+            description: "Admin Panel"
   widgets.yaml: |
     - greeting:
         text_size: xl
