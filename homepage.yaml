@@ -53,7 +53,8 @@ data:
             description: "Survival Mode"
             widget:
                 type: minecraft
-                server: "tcp://minecraft-service.gaming.svc.cluster.local:25565"
+                server: minecraft-service.gaming.svc.cluster.local
+                port: 25565
     - Infrastructure:
         - WireGuard VPN:
             icon: wireguard.png
