@@ -52,8 +52,9 @@ data:
             href: "#"
             description: "Survival Mode"
             widget:
-                type: minecraft
-                server: 10.43.194.142
+                type: gamedig
+                game: minecraft
+                host: 192.168.1.211
                 port: 25565
     - Infrastructure:
         - WireGuard VPN:
