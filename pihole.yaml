@@ -99,7 +99,7 @@ spec:
     app: pihole
   type: LoadBalancer
   # Pick your IP here
-  loadBalancerIP: 192.168.1.53
+  loadBalancerIP: 192.168.1.23
   ports:
     - port: 53
       targetPort: 53
