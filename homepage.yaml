@@ -30,11 +30,11 @@ data:
     - Management:
         - Uptime Kuma:
             icon: uptime-kuma.png
-            href: https://uptime.192.168.1.4.nip.io
+            href: https://uptime.192.168.30.195.nip.io
             description: Network Monitor
         - ArgoCD:
             icon: argo-cd.png
-            href: https://argocd.192.168.1.4.nip.io
+            href: https://argocd.192.168.30.195.nip.io
             description: GitOps Controller
     - Network:
         - Pi-hole:
@@ -45,7 +45,7 @@ data:
     - Gaming:
         - NES Emulator:
             icon: mdi-controller-classic
-            href: http://nes.192.168.1.4.nip.io
+            href: http://nes.192.168.30.195.nip.io
             description: Retro Gaming
         - Minecraft Server:
             icon: minecraft.png
@@ -59,7 +59,7 @@ data:
     - Infrastructure:
         - WireGuard VPN:
             icon: wireguard.png
-            href: "http://192.168.1.4:51821" # Replace X with your Pi's IP
+            href: "http://192.168.30.195:51821" # Replace X with your Pi's IP
             description: "Admin Panel"
   widgets.yaml: |
     - greeting:
@@ -161,10 +161,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - home.192.168.1.4.nip.io
+    - home.192.168.30.195.nip.io
     secretName: homepage-tls-secret
   rules:
-  - host: home.192.168.1.4.nip.io
+  - host: home.192.168.30.195.nip.io
     http:
       paths:
       - path: /
