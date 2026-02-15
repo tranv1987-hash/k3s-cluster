@@ -39,7 +39,7 @@ data:
     - Network:
         - Pi-hole:
             icon: pi-hole.png
-            href: http://192.168.1.253/admin/
+            href: http://192.168.30.190/admin/
             description: Ad Blocker
     # NEW SERVICE
     - Gaming:
@@ -54,7 +54,7 @@ data:
             widget:
                 type: gamedig
                 game: minecraft
-                host: 192.168.1.211
+                host: 192.168.30.200
                 port: 25565
     - Infrastructure:
         - WireGuard VPN:
