@@ -87,7 +87,7 @@ spec:
   selector:
     app: minecraft
   type: LoadBalancer
-  loadBalancerIP: 192.168.1.200
+  loadBalancerIP: 192.168.30.202
   ports:
   # 4. EXPOSE BOTH PORTS IN THE SERVICE
   - port: 25565
