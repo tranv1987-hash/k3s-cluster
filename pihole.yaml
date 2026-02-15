@@ -102,8 +102,8 @@ spec:
   selector:
     app: pihole
   type: LoadBalancer
-  # 🎯 CORRECT IP (Inside your MetalLB Pool .230-.250)
-  loadBalancerIP: 192.168.1.253
+  # 🎯 CORRECT IP (Inside your MetalLB Pool .190-.230)
+  loadBalancerIP: 192.168.30.190
   ports:
     - port: 53
       targetPort: 53
