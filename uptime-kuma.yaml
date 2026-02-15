@@ -67,10 +67,10 @@ spec:
  ingressClassName: nginx
  tls:
  - hosts:
-   - uptime.192.168.1.4.nip.io
+   - uptime.192.168.30.195.nip.io
    secretName: uptime-kuma-tls-secret
  rules:
- - host: uptime.192.168.1.4.nip.io
+ - host: uptime.192.168.30.195.nip.io
    http:
     paths:
     - path: /
