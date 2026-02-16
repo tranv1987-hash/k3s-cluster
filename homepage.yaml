@@ -30,11 +30,11 @@ data:
     - Management:
         - Uptime Kuma:
             icon: uptime-kuma.png
-            href: https://uptime.192.168.30.195.nip.io
+            href: https://uptime.192.168.30.190.nip.io
             description: Network Monitor
         - ArgoCD:
             icon: argo-cd.png
-            href: https://argocd.192.168.30.195.nip.io
+            href: https://argocd.192.168.30.190.nip.io
             description: GitOps Controller
     - Network:
         - Pi-hole:
@@ -59,7 +59,7 @@ data:
     - Infrastructure:
         - WireGuard VPN:
             icon: wireguard.png
-            href: "http://192.168.30.195:51821" # Replace X with your Pi's IP
+            href: "http://192.168.30.190:51821" # Replace X with your Pi's IP
             description: "Admin Panel"
   widgets.yaml: |
     - greeting:
@@ -158,13 +158,13 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: selfsigned-issuer
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
   - hosts:
-    - home.192.168.30.195.nip.io
+    - home.192.168.30.190.nip.io
     secretName: homepage-tls-secret
   rules:
-  - host: home.192.168.30.195.nip.io
+  - host: home.192.168.30.190.nip.io
     http:
       paths:
       - path: /
