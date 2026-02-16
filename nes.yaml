@@ -54,9 +54,9 @@ metadata:
   name: nes-ingress
   namespace: retro
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   rules:
-  - host: nes.192.168.30.195.nip.io
+  - host: nes.192.168.30.190.nip.io
     http:
       paths:
       - path: /
