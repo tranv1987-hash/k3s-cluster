@@ -42,7 +42,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: wireguard-secret
-                key: password
+                key: PASSWORD_HASH
           - name: WG_PORT
             value: "51820"
           - name: WG_DEFAULT_ADDRESS
