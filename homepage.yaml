@@ -39,7 +39,7 @@ data:
     - Network:
         - Pi-hole:
             icon: pi-hole.png
-            href: http://192.168.30.190/admin/
+            href: http://192.168.30.194/admin/
             description: Ad Blocker
     # NEW SERVICE
     - Gaming:
