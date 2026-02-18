@@ -22,31 +22,34 @@ data:
       Network:
         style: row
         columns: 2
-      # NEW SECTION
       Gaming:
         style: row
-        columns: 1
+        columns: 2
   services.yaml: |
     - Management:
         - Uptime Kuma:
             icon: uptime-kuma.png
-            href: https://uptime.192.168.1.4.nip.io
+            href: https://uptime.192.168.30.190.nip.io  # <--- CHANGED to Traefik IP (.190)
             description: Network Monitor
         - ArgoCD:
             icon: argo-cd.png
-            href: https://argocd.192.168.1.4.nip.io
+            href: https://argocd.192.168.30.190.nip.io   # <--- CHANGED to Traefik IP (.190)
             description: GitOps Controller
     - Network:
         - Pi-hole:
             icon: pi-hole.png
-            href: http://192.168.1.68/admin/
+            href: http://192.168.30.195/admin/            # <--- CHANGED to new Pi-hole IP (.195)
             description: Ad Blocker
-    # NEW SERVICE
+            widget:
+                type: pihole
+                url: http://192.168.30.195
+                key: "YOUR_API_KEY_HERE"  # (Optional: Add later for live stats)
+    - Infrastructure:
+        - WireGuard VPN:
+            icon: wireguard.png
+            href: http://192.168.30.196:51821             # <--- CHANGED to new WireGuard IP (.196)
+            description: "Admin Panel"
     - Gaming:
-        - NES Emulator:
-            icon: mdi-controller-classic
-            href: http://nes.192.168.1.4.nip.io
-            description: Retro Gaming
         - Minecraft Server:
             icon: minecraft.png
             href: "#"
@@ -54,13 +57,8 @@ data:
             widget:
                 type: gamedig
                 game: minecraft
-                host: 192.168.1.211
+                host: 192.168.30.200
                 port: 25565
-    - Infrastructure:
-        - WireGuard VPN:
-            icon: wireguard.png
-            href: "http://192.168.1.4:51821" # Replace X with your Pi's IP
-            description: "Admin Panel"
   widgets.yaml: |
     - greeting:
         text_size: xl
@@ -102,22 +100,10 @@ spec:
     spec:
       serviceAccountName: homepage
       initContainers:
-      - name: setup-files
+      - name: setup-icons
         image: busybox
-        command:
-          - 'sh'
-          - '-c'
-          - |
-            cp /config-source/* /app/config/
-            mkdir -p /app/config/icons
-            echo "Downloading icons..."
-            wget -q --no-check-certificate -O /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png || true
-            wget -q --no-check-certificate -O /app/config/icons/argo-cd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argo-cd.png || true
-            wget -q --no-check-certificate -O /app/config/icons/pi-hole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png || true
-            ls -la /app/config/icons
+        command: ["sh", "-c", "wget -q -O /app/config/icons/uptime-kuma.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/uptime-kuma.png && wget -q -O /app/config/icons/argo-cd.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/argo-cd.png && wget -q -O /app/config/icons/pi-hole.png https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png"]
         volumeMounts:
-        - name: config-source
-          mountPath: /config-source
         - name: config
           mountPath: /app/config
       containers:
@@ -125,12 +111,22 @@ spec:
         image: ghcr.io/gethomepage/homepage:latest
         ports:
         - containerPort: 3000
-        env:
-        - name: HOMEPAGE_ALLOWED_HOSTS
-          value: "*"
         volumeMounts:
-        - name: config
-          mountPath: /app/config
+        - name: config-source
+          mountPath: /app/config/settings.yaml
+          subPath: settings.yaml
+        - name: config-source
+          mountPath: /app/config/services.yaml
+          subPath: services.yaml
+        - name: config-source
+          mountPath: /app/config/widgets.yaml
+          subPath: widgets.yaml
+        - name: config-source
+          mountPath: /app/config/bookmarks.yaml
+          subPath: bookmarks.yaml
+        - name: config-source
+          mountPath: /app/config/kubernetes.yaml
+          subPath: kubernetes.yaml
       volumes:
       - name: config-source
         configMap:
@@ -158,13 +154,13 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: selfsigned-issuer
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik  # <--- CHANGED to ensure Traefik picks it up
   tls:
   - hosts:
-    - home.192.168.1.4.nip.io
+    - home.192.168.30.190.nip.io  # <--- CHANGED to Traefik IP
     secretName: homepage-tls-secret
   rules:
-  - host: home.192.168.1.4.nip.io
+  - host: home.192.168.30.190.nip.io # <--- CHANGED to Traefik IP
     http:
       paths:
       - path: /

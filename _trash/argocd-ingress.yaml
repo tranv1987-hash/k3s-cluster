@@ -5,15 +5,16 @@ metadata:
   namespace: argocd
   annotations:
     cert-manager.io/cluster-issuer: selfsigned-issuer
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    # CRITICAL CHANGE: Tells Traefik the backend is HTTPS
+    traefik.ingress.kubernetes.io/service.serversscheme: https
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik  # <--- CHANGED: Matches your K3s default
   tls:
   - hosts:
-    - argocd.192.168.1.4.nip.io
+    - argocd.192.168.30.190.nip.io  # <--- CHANGED: Points to Traefik (.190)
     secretName: argocd-server-tls
   rules:
-  - host: argocd.192.168.1.4.nip.io
+  - host: argocd.192.168.30.190.nip.io  # <--- CHANGED: Points to Traefik (.190)
     http:
       paths:
       - path: /

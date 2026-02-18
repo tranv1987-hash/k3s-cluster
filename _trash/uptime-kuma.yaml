@@ -1,82 +1,24 @@
-apiVersion: v1
-kind: Namespace
-metadata:
- name: uptime-kuma
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
- name: uptime-kuma-pvc
- namespace: uptime-kuma
-spec:
- accessModes:
-  - ReadWriteOnce
- storageClassName: local-path
- resources:
-  requests:
-    storage: 1Gi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
- name: uptime-kuma
- namespace: uptime-kuma
-spec:
- replicas: 1
- selector:
-  matchLabels:
-   app: uptime-kuma
- template:
-  metadata:
-   labels:
-    app: uptime-kuma
-  spec:
-   containers:
-   - name: uptime-kuma
-     image: louislam/uptime-kuma:1
-     ports:
-     - containerPort: 3001
-     volumeMounts:
-     - name: storage
-       mountPath: "/app/data"
-   volumes:
-   - name: storage
-     persistentVolumeClaim:
-       claimName: uptime-kuma-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
- name: uptime-kuma-service
- namespace: uptime-kuma
-spec:
- selector:
-  app: uptime-kuma
- ports:
- - port: 80
-   targetPort: 3001
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
- name: uptime-kuma-ingress
- namespace: uptime-kuma
- annotations:
-   cert-manager.io/cluster-issuer: selfsigned-issuer
+  name: uptime-kuma-ingress
+  namespace: uptime-kuma
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned-issuer
 spec:
- ingressClassName: nginx
- tls:
- - hosts:
-   - uptime.192.168.1.4.nip.io
-   secretName: uptime-kuma-tls-secret
- rules:
- - host: uptime.192.168.1.4.nip.io
-   http:
-    paths:
-    - path: /
-      pathType: Prefix
-      backend:
-       service:
-        name: uptime-kuma-service
-        port:
-         number: 80 
+  ingressClassName: traefik  # <--- CHANGED: Matches your K3s default controller
+  tls:
+  - hosts:
+    - uptime.192.168.30.190.nip.io  # <--- CHANGED: Points to Traefik LoadBalancer
+    secretName: uptime-kuma-tls-secret
+  rules:
+  - host: uptime.192.168.30.190.nip.io  # <--- CHANGED: Points to Traefik LoadBalancer
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: uptime-kuma-service
+            port:
+              number: 80
