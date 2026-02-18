@@ -50,10 +50,6 @@ data:
             href: http://192.168.30.196:51821             # <--- CHANGED to new WireGuard IP (.196)
             description: "Admin Panel"
     - Gaming:
-        - NES Emulator:
-            icon: mdi-controller-classic
-            href: https://nes.192.168.30.190.nip.io       # <--- CHANGED to Traefik IP (.190)
-            description: Retro Gaming
         - Minecraft Server:
             icon: minecraft.png
             href: "#"
