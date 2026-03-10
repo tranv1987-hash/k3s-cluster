@@ -48,7 +48,15 @@
 - **Domain:** vi3t-lab.com
 - **DNS Provider:** Cloudflare
 - **Subdomain pattern:** `*.vi3t-lab.com` for all internal services
-- **DNS resolution strategy:** Pi-hole will handle local DNS for `*.vi3t-lab.com` → MetalLB IPs (set up in Chapter 2)
+- **DNS resolution:** Pi-hole handles local DNS for `*.vi3t-lab.com` → `192.168.30.190` (Traefik)
+- **VLAN 10 DNS:** Set to `192.168.30.191` (Pi-hole) manually in Ubiquiti + Windows PC NIC
+- **IPv6:** Disabled on VLAN 10 devices — Pi-hole is IPv4 only
+
+### Pi-hole Local DNS Records
+| Domain | IP |
+|---|---|
+| argocd.vi3t-lab.com | 192.168.30.190 |
+| pihole.vi3t-lab.com | 192.168.30.190 |
 
 ---
 
@@ -57,6 +65,8 @@
 ### Nodes
 - 4x Raspberry Pi 4B running Raspberry Pi OS (Debian Trixie)
 - k3s installed, `git` installed on pi-master-0
+- Repo cloned at `~/k3s-cluster` on pi-master-0
+- Git credentials stored via `credential.helper store`
 
 ### k3s Config (`/etc/rancher/k3s/config.yaml` on pi-master-0)
 ```yaml
@@ -77,6 +87,7 @@ disable:
 - **IP Pool:** `192.168.30.190 - 192.168.30.230`
 - **Mode:** Layer 2 (ARP)
 - **Traefik:** holds `192.168.30.190` (first IP in pool)
+- **Pi-hole DNS:** holds `192.168.30.191`
 - **Known issue:** `bgppeers.metallb.io` CRD shows OutOfSync due to large caBundle — fixed via `ignoreDifferences` in `argocd-app.yaml`. Harmless — L2 mode doesn't use BGP.
 
 ---
@@ -89,13 +100,15 @@ disable:
 | MetalLB | metallb-system | v0.14.9 | Synced | Healthy |
 | Sealed Secrets | sealed-secrets | v0.27.3 | Synced | Healthy |
 | Cert-Manager | cert-manager | v1.17.1 | Synced | Healthy |
+| Pi-hole | pihole | 2024.07.0 | Synced | Healthy |
 
 ### ArgoCD
 - Installed via `kubectl apply -k` (bootstrapped manually, now self-managing)
-- Running in insecure mode internally (`server.insecure: true`) — Traefik handles HTTPS externally
-- Ingress: `argocd.vi3t-lab.com` (TLS cert issued, `argocd-tls` secret in argocd namespace)
-- **Access:** Not yet accessible via browser — Pi-hole local DNS needed first (Chapter 2)
+- Running in insecure mode (`server.insecure: true` in `argocd-cmd-params-cm`) — Traefik handles HTTPS
+- Ingress: `argocd.vi3t-lab.com` ✅ accessible via browser
+- TLS cert issued: `argocd-tls` in argocd namespace
 - ArgoCD manages itself via `core/argocd/argocd-app.yaml`
+- **Important:** Any changes to `argocd-cmd-params-cm` require manual `kubectl apply --server-side --force-conflicts` due to field ownership conflict with upstream install.yaml
 - **Important:** Any changes to `argocd-app.yaml` files require manual re-apply with `--server-side --force-conflicts`
 
 ### Sealed Secrets
@@ -116,7 +129,22 @@ kubectl create secret generic <secret-name> \
 - ClusterIssuer: `letsencrypt-cloudflare` — **READY: True**
 - Uses DNS-01 challenge via Cloudflare API
 - Cloudflare API token stored as SealedSecret: `cloudflare-api-token` in `cert-manager` namespace
-- **Certificate pattern:** Add annotation `cert-manager.io/cluster-issuer: letsencrypt-cloudflare` to any Ingress resource — cert is issued automatically
+- **Certificate pattern:** Add annotations to any Ingress:
+```yaml
+cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+traefik.ingress.kubernetes.io/router.entrypoints: websecure
+traefik.ingress.kubernetes.io/router.tls: "true"
+```
+
+### Pi-hole
+- Namespace: `pihole`
+- Image: `pihole/pihole:2024.07.0`
+- DNS service: `pihole-dns` — LoadBalancer at `192.168.30.191` (ports 53 UDP+TCP)
+- Web service: `pihole-web` — ClusterIP (port 80, internal only)
+- Ingress: `pihole.vi3t-lab.com` — TLS cert issued: `pihole-tls`
+- Admin password: stored as SealedSecret `pihole-secret` in `pihole` namespace
+- Storage: 1Gi PVC via `local-path-provisioner`
+- Bootstrapped via: `kubectl apply -f .../apps/pihole/argocd-app.yaml --server-side --force-conflicts`
 
 ---
 
@@ -135,8 +163,8 @@ k3s-cluster/
 │   │   └── argocd-app.yaml
 │   ├── metallb/
 │   │   ├── kustomization.yaml
-│   │   ├── metallb-native.yaml        # vendored v0.14.9 manifest
-│   │   ├── ipaddresspool.yaml         # pool: 192.168.30.190-230
+│   │   ├── metallb-native.yaml
+│   │   ├── ipaddresspool.yaml
 │   │   ├── l2advertisement.yaml
 │   │   └── argocd-app.yaml
 │   ├── sealed-secrets/
@@ -147,8 +175,18 @@ k3s-cluster/
 │       ├── clusterissuer.yaml
 │       ├── cloudflare-api-token-sealed.yaml
 │       └── argocd-app.yaml
-├── apps/                              # empty — services deployed in Chapter 2+
-├── _trash/                            # failed/old YAMLs kept for reference
+├── apps/
+│   └── pihole/
+│       ├── kustomization.yaml
+│       ├── namespace.yaml
+│       ├── pvc.yaml
+│       ├── deployment.yaml
+│       ├── service-dns.yaml
+│       ├── service-web.yaml
+│       ├── ingress.yaml
+│       ├── admin-secret-sealed.yaml
+│       └── argocd-app.yaml
+├── _trash/
 └── README.md
 ```
 
@@ -163,8 +201,9 @@ kubectl apply -f https://raw.githubusercontent.com/tranv1987-hash/k3s-cluster/ma
 ---
 
 ## Chapter Roadmap
-- ✅ **Chapter 1** — Infrastructure Groundwork (this chat)
-- ⏭️ **Chapter 2** — Core Services: Pi-hole (+ local DNS setup), OpenVPN
+- ✅ **Chapter 1** — Infrastructure Groundwork (ArgoCD, MetalLB, Sealed Secrets, Cert-Manager)
+- ✅ **Chapter 2** — Core Services: Pi-hole (local DNS, VLAN 10 pointing to Pi-hole)
+- ⏭️ **Chapter 2b** — Core Services: OpenVPN
 - ⏭️ **Chapter 3** — Monitoring: Grafana, Prometheus, Uptime Kuma
 - ⏭️ **Chapter 4** — Applications: Minecraft (Cloudflare Tunnel), Custom Dashboard
 
