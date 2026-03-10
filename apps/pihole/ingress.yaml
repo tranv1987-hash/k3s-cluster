@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pihole-ingress
+  namespace: pihole
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - pihole.vi3t-lab.com
+      secretName: pihole-tls
+  rules:
+    - host: pihole.vi3t-lab.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pihole-web
+                port:
+                  number: 80
