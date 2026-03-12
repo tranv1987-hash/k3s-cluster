@@ -26,7 +26,7 @@ spec:
               value: "en"
             - name: WG_HOST
               value: "vpn.vi3t-lab.com"
-            - name: PASSWORD
+            - name: PASSWORD_HASH
               valueFrom:
                 secretKeyRef:
                   name: wg-easy-secret
