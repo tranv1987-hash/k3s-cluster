@@ -15,16 +15,14 @@ spec:
     spec:
       containers:
         - name: cloudflare-ddns
-          image: oznu/cloudflare-ddns:latest
+          image: favonia/cloudflare-ddns:latest
           env:
             - name: CF_API_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: cloudflare-ddns-token
                   key: CF_API_TOKEN
-            - name: ZONE
-              value: "vi3t-lab.com"
-            - name: SUBDOMAIN
-              value: "vpn"
+            - name: DOMAINS
+              value: "vpn.vi3t-lab.com"
             - name: PROXIED
               value: "false"
