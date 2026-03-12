@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wg-easy
+  namespace: wireguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wg-easy
+  template:
+    metadata:
+      labels:
+        app: wg-easy
+    spec:
+      containers:
+        - name: wg-easy
+          image: ghcr.io/wg-easy/wg-easy:14
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - SYS_MODULE
+          env:
+            - name: LANG
+              value: "en"
+            - name: WG_HOST
+              value: "vpn.vi3t-lab.com"
+            - name: PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: wg-easy-secret
+                  key: WG_PASSWORD
+            - name: WG_PORT
+              value: "51820"
+            - name: WG_DEFAULT_DNS
+              value: "192.168.30.191"
+            - name: WG_ALLOWED_IPS
+              value: "0.0.0.0/0"
+          ports:
+            - containerPort: 51820
+              protocol: UDP
+            - containerPort: 51821
+              protocol: TCP
+          volumeMounts:
+            - name: wireguard-config
+              mountPath: /etc/wireguard
+      volumes:
+        - name: wireguard-config
+          hostPath:
+            path: /var/lib/wireguard
+            type: DirectoryOrCreate
