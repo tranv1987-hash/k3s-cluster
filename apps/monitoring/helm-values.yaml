@@ -1,6 +1,6 @@
 grafana:
-  adminSecret:
-    name: grafana-admin-secret
+  admin:
+    existingSecret: grafana-admin-secret
     userKey: admin-user
     passwordKey: admin-password
   ingress:
