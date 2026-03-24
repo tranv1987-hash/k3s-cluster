@@ -8,7 +8,6 @@ data:
     title: vi3t-lab
     theme: dark
     color: slate
-    allowedHosts: dashboard.vi3t-lab.com
 
   bookmarks.yaml: |
     []
