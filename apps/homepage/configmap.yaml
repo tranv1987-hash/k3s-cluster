@@ -45,31 +45,30 @@ data:
         - Grafana:
             href: https://grafana.vi3t-lab.com
             description: Metrics & Dashboards
-            ping: http://monitoring-grafana.monitoring.svc.cluster.local
+            siteMonitor: http://monitoring-grafana.monitoring.svc.cluster.local
         - Uptime Kuma:
             href: https://uptime.vi3t-lab.com
             description: Service Uptime Monitor
-            ping: http://uptime-kuma.uptime-kuma.svc.cluster.local:3001
+            siteMonitor: http://uptime-kuma.uptime-kuma.svc.cluster.local:3001
     - DNS:
         - Pi-hole:
             href: https://pihole.vi3t-lab.com
             description: Local DNS & Ad Blocking
-            ping: http://pihole-web.pihole.svc.cluster.local
+            siteMonitor: http://pihole-web.pihole.svc.cluster.local
     - VPN:
         - WireGuard:
             href: http://192.168.30.192:51821
             description: VPN Tunnel
-            ping: http://wg-easy.wireguard.svc.cluster.local:51821
+            siteMonitor: http://wg-easy.wireguard.svc.cluster.local:51821
     - Infrastructure:
         - ArgoCD:
             href: https://argocd.vi3t-lab.com
             description: GitOps Deployment
-            ping: http://argocd-server.argocd.svc.cluster.local
+            siteMonitor: http://argocd-server.argocd.svc.cluster.local
     - Games:
         - Minecraft:
             href: https://mc.vi3t-lab.com
             description: Vanilla Minecraft Java Server
-            ping: http://minecraft.minecraft.svc.cluster.local:25565
 
   kubernetes.yaml: |
     mode: disabled
