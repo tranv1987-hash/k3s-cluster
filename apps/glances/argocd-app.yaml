@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: glances
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/tranv1987-hash/k3s-cluster
+    targetRevision: HEAD
+    path: apps/glances
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: glances
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
