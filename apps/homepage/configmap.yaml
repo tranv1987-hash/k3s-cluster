@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+  namespace: homepage
+data:
+  settings.yaml: |
+    title: vi3t-lab
+    theme: dark
+    color: slate
+
+  bookmarks.yaml: |
+    []
+
+  widgets.yaml: |
+    - resources:
+        label: pi-master-0
+        cpu: true
+        memory: true
+        disk: /
+        expanded: true
+        url: http://192.168.30.10:61208
+    - resources:
+        label: pi-worker-1
+        cpu: true
+        memory: true
+        expanded: true
+        url: http://192.168.30.11:61208
+    - resources:
+        label: pi-worker-2
+        cpu: true
+        memory: true
+        expanded: true
+        url: http://192.168.30.12:61208
+    - resources:
+        label: pi-worker-3
+        cpu: true
+        memory: true
+        expanded: true
+        url: http://192.168.30.13:61208
+
+  services.yaml: |
+    - Monitoring:
+        - Grafana:
+            href: https://grafana.vi3t-lab.com
+            description: Metrics & Dashboards
+            ping: https://grafana.vi3t-lab.com
+        - Uptime Kuma:
+            href: https://uptime.vi3t-lab.com
+            description: Service Uptime Monitor
+            ping: https://uptime.vi3t-lab.com
+    - DNS:
+        - Pi-hole:
+            href: https://pihole.vi3t-lab.com
+            description: Local DNS & Ad Blocking
+            ping: https://pihole.vi3t-lab.com
+    - VPN:
+        - WireGuard:
+            href: http://192.168.30.192:51821
+            description: VPN Tunnel
+            ping: http://192.168.30.192:51821
+    - Infrastructure:
+        - ArgoCD:
+            href: https://argocd.vi3t-lab.com
+            description: GitOps Deployment
+            ping: https://argocd.vi3t-lab.com
+    - Games:
+        - Minecraft:
+            href: https://mc.vi3t-lab.com
+            description: Vanilla Minecraft Java Server
+            ping: https://mc.vi3t-lab.com
+
+  kubernetes.yaml: |
+    mode: disabled
