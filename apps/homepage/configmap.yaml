@@ -1,3 +1,4 @@
+# vi3t-lab homepage configuration
 apiVersion: v1
 kind: ConfigMap
 metadata:
