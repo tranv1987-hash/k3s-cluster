@@ -30,6 +30,8 @@ spec:
                 secretKeyRef:
                   name: minecraft-rcon
                   key: rcon-password
+            - name: ENABLE_QUERY
+              value: "true"
           ports:
             - containerPort: 25565
               name: minecraft
