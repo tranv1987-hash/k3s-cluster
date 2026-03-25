@@ -45,30 +45,54 @@ data:
         - Grafana:
             href: https://grafana.vi3t-lab.com
             description: Metrics & Dashboards
+            icon: grafana.png
             siteMonitor: http://monitoring-grafana.monitoring.svc.cluster.local
         - Uptime Kuma:
             href: https://uptime.vi3t-lab.com
             description: Service Uptime Monitor
+            icon: uptime-kuma.png
             siteMonitor: http://uptime-kuma.uptime-kuma.svc.cluster.local:3001
     - DNS:
         - Pi-hole:
             href: https://pihole.vi3t-lab.com
             description: Local DNS & Ad Blocking
+            icon: pi-hole.png
             siteMonitor: http://pihole-web.pihole.svc.cluster.local
     - VPN:
         - WireGuard:
             href: http://192.168.30.192:51821
             description: VPN Tunnel
+            icon: wireguard.png
             siteMonitor: http://wg-easy.wireguard.svc.cluster.local:51821
     - Infrastructure:
         - ArgoCD:
             href: https://argocd.vi3t-lab.com
             description: GitOps Deployment
+            icon: argocd.png
             siteMonitor: http://argocd-server.argocd.svc.cluster.local
+    - Network:
+        - Unifi:
+            href: https://192.168.1.1
+            description: Network Controller
+            icon: unifi.png
+        - TP-Link Switch:
+            href: http://192.168.99.2
+            description: TL-SG2210P Management
+            icon: tplink.png
+    - Online:
+        - Cloudflare:
+            href: https://dash.cloudflare.com
+            description: DNS & Domain Management
+            icon: cloudflare.png
+        - GitHub:
+            href: https://github.com/tranv1987-hash
+            description: k3s Cluster Repo
+            icon: github.png
     - Games:
         - Minecraft:
             href: https://mc.vi3t-lab.com
             description: Vanilla Minecraft Java Server
+            icon: minecraft.png
             widget:
               type: minecraft
               url: udp://minecraft.minecraft.svc.cluster.local:25565
