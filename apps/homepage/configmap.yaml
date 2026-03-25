@@ -8,10 +8,8 @@ data:
     title: vi3t-lab
     theme: dark
     color: slate
-
   bookmarks.yaml: |
     []
-
   widgets.yaml: |
     - resources:
         label: pi-master-0
@@ -41,7 +39,6 @@ data:
         disk: /etc/hosts
         expanded: true
         url: http://192.168.30.13:61208
-
   services.yaml: |
     - Monitoring:
         - Grafana:
@@ -71,6 +68,8 @@ data:
         - Minecraft:
             href: https://mc.vi3t-lab.com
             description: Vanilla Minecraft Java Server
-
+            widget:
+              type: minecraft
+              url: udp://minecraft.minecraft.svc.cluster.local:25565
   kubernetes.yaml: |
     mode: disabled
