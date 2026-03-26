@@ -23,6 +23,7 @@ data:
         longitude: -90.3679
         units: imperial
         cache: 5
+        provider: openmeteo
     - resources:
         label: pi-master-0
         cpu: true
