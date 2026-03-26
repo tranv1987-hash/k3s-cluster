@@ -13,6 +13,18 @@ spec:
       labels:
         app: homepage
     spec:
+      initContainers:
+        - name: copy-configs
+          image: busybox
+          command:
+            - sh
+            - -c
+            - cp /config-source/* /app/config/
+          volumeMounts:
+            - name: config-source
+              mountPath: /config-source
+            - name: config-dir
+              mountPath: /app/config
       containers:
         - name: homepage
           image: ghcr.io/gethomepage/homepage:latest
@@ -23,22 +35,11 @@ spec:
             - containerPort: 3000
               name: http
           volumeMounts:
-            - name: config
-              mountPath: /app/config/settings.yaml
-              subPath: settings.yaml
-            - name: config
-              mountPath: /app/config/bookmarks.yaml
-              subPath: bookmarks.yaml
-            - name: config
-              mountPath: /app/config/widgets.yaml
-              subPath: widgets.yaml
-            - name: config
-              mountPath: /app/config/services.yaml
-              subPath: services.yaml
-            - name: config
-              mountPath: /app/config/kubernetes.yaml
-              subPath: kubernetes.yaml
+            - name: config-dir
+              mountPath: /app/config
       volumes:
-        - name: config
+        - name: config-source
           configMap:
             name: homepage-config
+        - name: config-dir
+          emptyDir: {}
