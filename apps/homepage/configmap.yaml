@@ -23,21 +23,18 @@ data:
         label: pi-worker-1
         cpu: true
         memory: true
-        disk: /etc/hosts
         expanded: true
         url: http://192.168.30.11:61208
     - resources:
         label: pi-worker-2
         cpu: true
         memory: true
-        disk: /etc/hosts
         expanded: true
         url: http://192.168.30.12:61208
     - resources:
         label: pi-worker-3
         cpu: true
         memory: true
-        disk: /etc/hosts
         expanded: true
         url: http://192.168.30.13:61208
   services.yaml: |
