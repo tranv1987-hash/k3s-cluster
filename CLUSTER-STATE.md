@@ -79,6 +79,8 @@ disable:
 - **Traefik:** holds `192.168.30.190` (first IP in pool)
 - **Pi-hole:** holds `192.168.30.191`
 - **WireGuard:** holds `192.168.30.192`
+- **Minecraft:** holds `192.168.30.193`
+- **Homepage:** holds `192.168.30.194`
 - **Known issue:** `bgppeers.metallb.io` CRD shows OutOfSync due to large caBundle — fixed via `ignoreDifferences` in `argocd-app.yaml`. Harmless — L2 mode doesn't use BGP.
 
 ---
@@ -129,11 +131,13 @@ kubectl create secret generic <secret-name> \
 - Local DNS for `*.vi3t-lab.com` → MetalLB IPs
 - IP: `192.168.30.191`
 - Web UI: `https://pihole.vi3t-lab.com/admin` (note: must use `/admin` path)
-- **Current local DNS records (`/etc/pihole/custom.list`):**
+- **Current local DNS records:**
   - `192.168.30.190 argocd.vi3t-lab.com`
   - `192.168.30.190 pihole.vi3t-lab.com`
   - `192.168.30.190 grafana.vi3t-lab.com`
   - `192.168.30.190 uptime.vi3t-lab.com`
+  - `192.168.30.190 dashboard.vi3t-lab.com`
+  - `192.168.30.193 mc.vi3t-lab.com`
 - **To add a new DNS record:**
 ```bash
 kubectl exec -n pihole -it $(kubectl get pod -n pihole -o name | head -1) -- bash -c 'echo "192.168.30.190 <subdomain>.vi3t-lab.com" >> /etc/pihole/custom.list'
@@ -182,6 +186,53 @@ python3 -c "import bcrypt; print(bcrypt.hashpw(b'YOUR_PASSWORD', bcrypt.gensalt(
   - `https://pihole.vi3t-lab.com/admin`
   - `https://uptime.vi3t-lab.com`
 
+### Minecraft
+- Namespace: `minecraft`
+- Image: `itzg/minecraft-server:latest`
+- Type: Vanilla Java Edition, latest version
+- IP: `192.168.30.193`
+- Port: TCP 25565 (game), TCP 25575 (RCON)
+- External access: `mc.vi3t-lab.com` via Cloudflare DNS A record → WAN IP → port forward
+- World data: 5Gi PVC (survives pod restarts)
+- RCON password: SealedSecret `minecraft-rcon` in `minecraft` namespace
+- Query protocol enabled (`ENABLE_QUERY: true`) for Homepage widget
+- **Port forward:** TCP 25565 → 192.168.30.193:25565
+- **Cloudflare DNS:** A record `mc` → WAN IP (DNS only, NOT proxied — raw TCP)
+
+### Glances
+- Namespace: `glances`
+- Type: DaemonSet — one pod per node automatically
+- Image: `nicolargo/glances:latest-full`
+- Purpose: Exposes per-node CPU, RAM, disk stats via API on port 61208
+- Used by: Homepage dashboard node widgets
+- Node IPs:
+  - pi-master-0: `192.168.30.10:61208`
+  - pi-worker-1: `192.168.30.11:61208`
+  - pi-worker-2: `192.168.30.12:61208`
+  - pi-worker-3: `192.168.30.13:61208`
+- Runs with `hostNetwork: true` and `privileged: true` to read real hardware metrics
+
+### Homepage Dashboard
+- Namespace: `homepage`
+- Image: `ghcr.io/gethomepage/homepage:latest`
+- Version: v1.11.0
+- IP: `192.168.30.194`
+- Ingress: `dashboard.vi3t-lab.com` (TLS via cert-manager, secret: `homepage-tls`)
+- Config: stored in `homepage-config` ConfigMap, copied into pod via initContainer
+- Pi-hole API token: SealedSecret `pihole-api-token` in `homepage` namespace
+- **Important — subPath caching issue:** Homepage uses an initContainer to copy ConfigMap files into an emptyDir. After updating the ConfigMap, always verify it updated before deleting the pod:
+```bash
+kubectl get configmap homepage-config -n homepage -o jsonpath='{.data.services\.yaml}' | grep <something-new>
+```
+- **HOMEPAGE_ALLOWED_HOSTS** must be set as env var in deployment (not in settings.yaml)
+- **Widgets configured:**
+  - openmeteo weather (Overland, MO)
+  - datetime
+  - Per-node CPU/RAM/disk via Glances
+  - Pi-hole live query stats
+  - Minecraft live status/players/version
+- **Service groups:** Monitoring, DNS, VPN, Infrastructure, Network, Online, Games
+
 ---
 
 ## Installed Apps
@@ -193,6 +244,9 @@ python3 -c "import bcrypt; print(bcrypt.hashpw(b'YOUR_PASSWORD', bcrypt.gensalt(
 | Cloudflare DDNS | cloudflare-ddns | — | — | Keeps vpn.vi3t-lab.com pointed at WAN IP |
 | Grafana | monitoring | 192.168.30.190 | 443 | grafana.vi3t-lab.com — via Traefik |
 | Uptime Kuma | uptime-kuma | 192.168.30.190 | 443 | uptime.vi3t-lab.com — via Traefik |
+| Minecraft | minecraft | 192.168.30.193 | 25565 TCP, 25575 TCP | mc.vi3t-lab.com — direct MetalLB |
+| Glances | glances | per-node | 61208 TCP | DaemonSet — one pod per node |
+| Homepage | homepage | 192.168.30.194 | 443 | dashboard.vi3t-lab.com — via Traefik |
 
 ---
 
@@ -216,6 +270,7 @@ python3 -c "import bcrypt; print(bcrypt.hashpw(b'YOUR_PASSWORD', bcrypt.gensalt(
 | ArkServerAdmin | TCP | 27020 | 192.168.30.245 | 27020 |
 | ArkFindMe | UDP | 27015 | 192.168.30.245 | 27015 |
 | WireGuard VPN | UDP | 51820 | 192.168.30.192 | 51820 |
+| Minecraft | TCP | 25565 | 192.168.30.193 | 25565 |
 
 ---
 
@@ -234,8 +289,8 @@ k3s-cluster/
 │   │   └── argocd-app.yaml
 │   ├── metallb/
 │   │   ├── kustomization.yaml
-│   │   ├── metallb-native.yaml        # vendored v0.14.9 manifest
-│   │   ├── ipaddresspool.yaml         # pool: 192.168.30.190-230
+│   │   ├── metallb-native.yaml
+│   │   ├── ipaddresspool.yaml
 │   │   ├── l2advertisement.yaml
 │   │   └── argocd-app.yaml
 │   ├── sealed-secrets/
@@ -267,16 +322,39 @@ k3s-cluster/
 │   │   ├── kustomization.yaml
 │   │   ├── argocd-app-prereqs.yaml
 │   │   └── argocd-app.yaml
-│   └── uptime-kuma/
+│   ├── uptime-kuma/
+│   │   ├── namespace.yaml
+│   │   ├── pvc.yaml
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   └── argocd-app.yaml
+│   ├── minecraft/
+│   │   ├── namespace.yaml
+│   │   ├── pvc.yaml
+│   │   ├── secret-sealed.yaml
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   ├── kustomization.yaml
+│   │   └── argocd-app.yaml
+│   ├── glances/
+│   │   ├── namespace.yaml
+│   │   ├── daemonset.yaml
+│   │   ├── service.yaml
+│   │   ├── kustomization.yaml
+│   │   └── argocd-app.yaml
+│   └── homepage/
 │       ├── namespace.yaml
-│       ├── pvc.yaml
+│       ├── configmap.yaml
+│       ├── pihole-secret-sealed.yaml
 │       ├── deployment.yaml
 │       ├── service.yaml
 │       ├── ingress.yaml
 │       ├── kustomization.yaml
 │       └── argocd-app.yaml
 ├── _trash/
-│   └── openvpn/                       # abandoned — no ARM64 support
+│   └── openvpn/
 └── README.md
 ```
 
@@ -285,7 +363,7 @@ k3s-cluster/
 ## Bootstrapping Pattern
 > Any new ArgoCD Application must be bootstrapped once manually, then ArgoCD manages it forever after:
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/tranv1987-hash/k3s-cluster/main/<path>/argocd-app.yaml --server-side --force-conflicts
+kubectl apply -f https://raw.githubusercontent.com/tranv1987-hash/k3s-cluster/refs/heads/main/<path>/argocd-app.yaml
 ```
 
 ---
@@ -294,7 +372,8 @@ kubectl apply -f https://raw.githubusercontent.com/tranv1987-hash/k3s-cluster/ma
 - ✅ **Chapter 1** — Infrastructure Groundwork (ArgoCD, MetalLB, Sealed Secrets, Cert-Manager)
 - ✅ **Chapter 2** — Core Services (Pi-hole + local DNS, WireGuard VPN)
 - ✅ **Chapter 3** — Monitoring (kube-prometheus-stack: Grafana + Prometheus, Uptime Kuma)
-- ⏭️ **Chapter 4** — Applications: Minecraft (Cloudflare Tunnel), Custom Dashboard
+- ✅ **Chapter 4** — Applications (Minecraft, Homepage Dashboard with Glances)
+- ⏭️ **Chapter 5** — Proxmox Integration (expose Proxmox services via k3s ingress)
 
 ---
 
