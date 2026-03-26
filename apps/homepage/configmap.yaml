@@ -18,7 +18,8 @@ data:
           dateStyle: long
           timeStyle: short
           hour12: true
-    - weather:
+    - openmeteo:
+        label: Overland, MO
         latitude: 38.6979
         longitude: -90.3679
         units: imperial
