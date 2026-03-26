@@ -65,7 +65,7 @@ data:
         - ArgoCD:
             href: https://argocd.vi3t-lab.com
             description: GitOps Deployment
-            icon: argocd-cd.png
+            icon: argo-cd.png
             siteMonitor: http://argocd-server.argocd.svc.cluster.local
     - Network:
         - Unifi:
