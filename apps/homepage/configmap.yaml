@@ -68,7 +68,7 @@ data:
         - ArgoCD:
             href: https://argocd.vi3t-lab.com
             description: GitOps Deployment
-            icon: argocd.png
+            icon: argocd-cd.png
             siteMonitor: http://argocd-server.argocd.svc.cluster.local
     - Network:
         - Unifi:
@@ -78,7 +78,7 @@ data:
         - TP-Link Switch:
             href: http://192.168.99.2
             description: TL-SG2210P Management
-            icon: tplink.png
+            icon: tp-link.png
     - Online:
         - Cloudflare:
             href: https://dash.cloudflare.com
