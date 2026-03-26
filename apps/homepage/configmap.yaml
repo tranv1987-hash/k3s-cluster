@@ -12,6 +12,17 @@ data:
   bookmarks.yaml: |
     []
   widgets.yaml: |
+    - datetime:
+        text_size: xl
+        format:
+          dateStyle: long
+          timeStyle: short
+          hour12: true
+    - weather:
+        latitude: 38.6979
+        longitude: -90.3679
+        units: imperial
+        cache: 5
     - resources:
         label: pi-master-0
         cpu: true
@@ -55,6 +66,10 @@ data:
             description: Local DNS & Ad Blocking
             icon: pi-hole.png
             siteMonitor: http://pihole-web.pihole.svc.cluster.local
+            widget:
+              type: pihole
+              url: http://pihole-web.pihole.svc.cluster.local
+              key: "{{HOMEPAGE_VAR_PIHOLE_TOKEN}}"
     - VPN:
         - WireGuard:
             href: http://192.168.30.192:51821
