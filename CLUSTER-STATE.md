@@ -373,7 +373,7 @@ kubectl apply -f https://raw.githubusercontent.com/tranv1987-hash/k3s-cluster/re
 - ✅ **Chapter 2** — Core Services (Pi-hole + local DNS, WireGuard VPN)
 - ✅ **Chapter 3** — Monitoring (kube-prometheus-stack: Grafana + Prometheus, Uptime Kuma)
 - ✅ **Chapter 4** — Applications (Minecraft, Homepage Dashboard with Glances)
-- ⏭️ **Chapter 5** — Proxmox Integration (expose Proxmox services via k3s ingress)
+- ⏭️ **Chapter 5** — Bonus chapter
 
 ---
 
