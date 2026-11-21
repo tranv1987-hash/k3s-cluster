@@ -24,6 +24,8 @@ spec:
                 secretKeyRef:
                   name: pihole-secret
                   key: password
+            - name: DNSMASQ_LISTENING
+              value: "all"
           ports:
             - containerPort: 80
               name: web
