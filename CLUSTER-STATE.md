@@ -1,5 +1,6 @@
 # k3s Homelab Cluster State
 > Keep this file updated at the end of every chapter. Paste raw URL into new Claude chats to resume.
+> **Last updated:** 2026-11-20 — Network migration to UniFi switch, Pi-hole + ArgoCD fixes (see Change Log)
 
 ---
 
@@ -10,6 +11,17 @@
 - Explain the why behind each step
 - Do not assume firewall rules — always ask
 - Always use `--server-side --force-conflicts` when applying large manifests
+- `kubectl` only works on **pi-master-0** (workers have no API server / kubeconfig)
+
+---
+
+## Internet & Gateway
+- **ISP:** Spectrum, 500 Mbps plan (measured ~438 Mbps down / ~22.7 Mbps up)
+- **Gateway:** UniFi Cloud Gateway Ultra (192.168.1.1)
+  - Port 4 → USW-Lite-16-PoE (port 15) — trunk, the only LAN uplink
+  - Port 5 → WAN (Spectrum modem)
+  - Ports 1–3 → free (everything moved to the switch)
+- **Why it matters:** cable upload is small (~22 Mbps). One heavy uploader can fill it and make the whole house feel "down." All cross-VLAN + internet traffic shares the single 1 Gbps uplink (gateway port 4 ↔ USW port 15).
 
 ---
 
@@ -17,30 +29,96 @@
 
 | Device | IP | VLAN | Notes |
 |---|---|---|---|
-| Ubiquiti Cloud Gateway Ultra | Gateway | — | Main router |
-| TP-Link TL-SG2210P V3 | 192.168.99.2 | VLAN 99 | Managed switch |
-| ASRock_Master | 192.168.99.67 | VLAN 99 | Proxmox 8.4.16, acts as trunk |
-| pi-master-0 | 192.168.30.10 | VLAN 30 | k3s master node |
-| pi-worker-1 | 192.168.30.11 | VLAN 30 | k3s worker node |
-| pi-worker-2 | 192.168.30.12 | VLAN 30 | k3s worker node |
-| pi-worker-3 | 192.168.30.13 | VLAN 30 | k3s worker node |
+| UniFi Cloud Gateway Ultra | 192.168.1.1 | 1 (Default) | Router, firewall, DHCP |
+| UniFi USW-Lite-16-PoE | 192.168.1.69 | 1 (Default) | Main switch (replaced TP-Link) |
+| UniFi U7 Lite | 192.168.1.107 | 1 (Default) | Wi-Fi AP, USW port 7 (PoE) |
+| ASRock_Master | 192.168.99.67 | 99 (MGMT) | Proxmox 8.4.16 host — containers on VLAN 30 (tagged) |
+| pi-master-0 | 192.168.30.10 | 30 | k3s master node |
+| pi-worker-1 | 192.168.30.11 | 30 | k3s worker node |
+| pi-worker-2 | 192.168.30.12 | 30 | k3s worker node |
+| pi-worker-3 | 192.168.30.13 | 30 | k3s worker node |
+| pve-node1 (EliteDesk) | 192.168.30.101 | 30 | Proxmox — AI Platform Lab |
+| pve-node2 (EliteDesk) | 192.168.30.102 | 30 | Proxmox — AI Platform Lab |
+| pve-node3 (EliteDesk) | 192.168.30.103 | 30 | Proxmox — AI Platform Lab |
+| Advantech touchscreen (debian) | 192.168.30.158 | 30 | Proxmox management station (browser to ASRock); often asleep — no link is normal |
+| MagicMirror Pi ("Mr. Pi") | 192.168.1.68 | 1 (Default) | Own power supply, USW port 9 |
+| NVIDIA Shield TV | 192.168.20.142 | 20 (IoT) | Wired, USW port 10 |
+| Friend's PC (NucBox M5 Ultra) | 192.168.40.99 | 40 (Isolated) | Internet-only, managed remotely by friend |
+| ~~TP-Link TL-SG2210P V3~~ | ~~192.168.99.2~~ | — | Retired 2026-11 until further notice — kept for a future STP lab |
 
 ### VLANs
-- **VLAN 10** — Trusted (personal PC, phone)
-- **VLAN 20** — IoT (streaming devices, gaming consoles)
-- **VLAN 30** — Homelab (k3s cluster + Proxmox containers)
-- **VLAN 99** — Management (ASRock_Master, managed switch)
+- **VLAN 1** — Default (network gear: gateway, switch, AP; MagicMirror)
+- **VLAN 10** — Trusted (personal PC, phone) — Wi-Fi: **TrustMeBro**
+- **VLAN 20** — IoT (streaming devices, gaming consoles) — Wi-Fi: **VIoT**
+- **VLAN 30** — Homelab (k3s cluster, EliteDesks, Proxmox containers, Advantech)
+- **VLAN 40** — Isolated (friend's PC) — internet only, "Isolate Network" on, DNS 1.1.1.1/1.0.0.1
+- **VLAN 99** — Management (ASRock_Master host)
+
+### Switch — USW-Lite-16-PoE (port map)
+> **Why this switch:** replaced the TP-Link so the whole network is managed in one UniFi dashboard, powers the Pis + AP over PoE, shows per-port watts/traffic, and freed gateway ports.
+> **Rule:** VLAN settings belong to the **port**, not the device — when you move a cable, update that port's settings.
+> Ports 1–8 are PoE+ (45W total budget). Ports 9–16 have no PoE.
+
+| Port | Device | Mode | Native VLAN | Tagged | PoE |
+|---|---|---|---|---|---|
+| 1 | EliteDesk (pve-node1 or 3) | Edge | Homelab | Block All | Off |
+| 2 | pi-master-0 | Edge | Homelab | Block All | PoE+ |
+| 3 | EliteDesk (pve-node2) | Edge | Homelab | Block All | Off |
+| 4 | pi-worker-1 | Edge | Homelab | Block All | PoE+ |
+| 5 | EliteDesk (pve-node1 or 3) | Edge | Homelab | Block All | Off |
+| 6 | pi-worker-2 | Edge | Homelab | Block All | PoE+ |
+| 7 | U7 Lite | Infrastructure | Default | Custom: Trusted + IoT | PoE+ |
+| 8 | pi-worker-3 | Edge | Homelab | Block All | PoE+ |
+| 9 | MagicMirror | Edge | Default | Block All | — |
+| 10 | NVIDIA Shield | Edge | IoT (20) | Block All | — |
+| 11 | ASRock_Master | Edge | MGMT (99) | Custom: Homelab (30) | — |
+| 12 | Advantech | Edge | Homelab (30) | Block All | — |
+| 13 | Desktop PC | Edge | Trusted (10) | Block All | — |
+| 14 | Friend's PC | Edge | Isolated (40) | Block All | — |
+| 15 | Uplink → gateway port 4 | Infrastructure | Default | Allow All | — |
+| 16 | Spare (was TP-Link bridge) | — | — | — | Disabled |
+
+**Why some ports differ:**
+- **Pis on the bottom row (2/4/6/8):** Pi tray sits below the switch — cables drop straight down.
+- **U7 (port 7):** AP's own IP is on Default (untagged); Wi-Fi networks ride tagged. Only Trusted + IoT tagged (least privilege) — **add any new Wi-Fi VLAN here** or its clients get no IP. Infrastructure mode keeps loop protection on (APs can mesh).
+- **ASRock (port 11):** Proxmox host is untagged on VLAN 99; its containers send VLAN 30 **tagged** (`tag=30` in each LXC config). Port needs both.
+- **Edge mode:** end device, not a switch → port comes up fast.
+- **Unused ports disabled:** a live unused port is an open door.
+
+### PoE Power (measured 2026-11-14)
+- Each Pi 4B + PoE HAT: **~3.6W idle**, **~6W boot peak** (~20 sec), blips to ~5.6W when k3s starts pods
+- U7 Lite: **13W max** (spec)
+- Worst case (4 Pis booting + U7 maxed): ~37W of 45W budget
+- **Log per-port power live** (SSH into the switch):
+```bash
+ssh <device-ssh-user>@192.168.1.69
+swctrl poe show                      # all PoE ports, watts/volts/mA
+while true; do echo "$(date +%T) $(swctrl poe show | grep '^ *2 ')"; sleep 1; done | tee /tmp/poe-boot.log   # one port, every second
+```
+
+### Wi-Fi
+| SSID | Network | VLAN |
+|---|---|---|
+| TrustMeBro | Trusted | 10 |
+| VIoT | IoT | 20 |
 
 ### Proxmox Containers (VLAN 30, on ASRock_Master)
 | Container | ID | IP |
 |---|---|---|
-| nginx | 100 | 192.168.30.66 |
+| npm (Nginx Proxy Manager) | 100 | 192.168.30.66 |
 | jellyfin | 101 | 192.168.30.65 |
 | nextcloud | 102 | 192.168.30.64 |
-| ArkServer | 103 | 192.168.30.245 |
+| palworld | 103 | 192.168.30.245 |
+| audiobookshelf | 104 | 192.168.30.63 |
+| navidrome | 105 | 192.168.30.62 |
+| kavita | 106 | 192.168.30.61 |
+| arrstack | 107 | 192.168.30.60 |
+- All containers use `bridge=vmbr0,tag=30`. Find which container owns a MAC: `grep -ril "<mac>" /etc/pve/`
+- VietNas runs inside the ASRock (Jellyfin ↔ NAS traffic never leaves the box)
 
-### Backburner (not in scope yet)
-- 3x HP EliteDesk 705 G4 — reserved for future project
+### EliteDesks (3x HP EliteDesk 705 G4)
+- pve-node1/2/3 at `192.168.30.101–103`, each running Proxmox VE
+- Host k3s VMs for the **AI Platform Lab** (separate repo: `github.com/tranv1987-hash/ai-platform-lab`) — not part of this Pi cluster
 
 ---
 
@@ -49,13 +127,14 @@
 - **DNS Provider:** Cloudflare
 - **Subdomain pattern:** `*.vi3t-lab.com` for all internal services
 - **DNS resolution strategy:** Pi-hole handles local DNS for `*.vi3t-lab.com` → MetalLB IPs
+- **If Pi-hole is down,** `*.vi3t-lab.com` names won't resolve (ArgoCD/Pi-hole web UIs "won't load"). Emergency workaround: add `192.168.30.190 argocd.vi3t-lab.com` etc. to the desktop hosts file (`C:\Windows\System32\drivers\etc\hosts`).
 
 ---
 
 ## k3s Cluster
 
 ### Nodes
-- 4x Raspberry Pi 4B running Raspberry Pi OS (Debian Trixie)
+- 4x Raspberry Pi 4B running Raspberry Pi OS (Debian Trixie), powered by PoE from the USW
 - k3s installed, `git` installed on pi-master-0
 
 ### k3s Config (`/etc/rancher/k3s/config.yaml` on pi-master-0)
@@ -71,6 +150,16 @@ disable:
 - metrics-server — resource metrics
 - local-path-provisioner — default storage provisioner
 
+### Safe Shutdown (before moving Pi cables / cutting PoE)
+> Unplugging a PoE cable = pulling the power cord. Shut down cleanly first — workers first, master last.
+```bash
+ssh tranv@192.168.30.11 'sudo shutdown -h now'
+ssh tranv@192.168.30.12 'sudo shutdown -h now'
+ssh tranv@192.168.30.13 'sudo shutdown -h now'
+ssh tranv@192.168.30.10 'sudo shutdown -h now'
+```
+After power returns: `kubectl get nodes -o wide` (all Ready, same IPs) and `kubectl get pods -A | grep -v Running`
+
 ---
 
 ## MetalLB
@@ -82,6 +171,8 @@ disable:
 - **Minecraft:** holds `192.168.30.193`
 - **Homepage:** holds `192.168.30.194`
 - **Known issue:** `bgppeers.metallb.io` CRD shows OutOfSync due to large caBundle — fixed via `ignoreDifferences` in `argocd-app.yaml`. Harmless — L2 mode doesn't use BGP.
+- **Normal, not a bug:** UniFi may list a Pi with a service IP (e.g. pi-worker-2 shown at `.193`). In L2 mode one node answers ARP for each service IP, so UniFi sees that node's MAC on it.
+- ⚠️ **Service IPs are not pinned** — they could change if a service is deleted/recreated. Firewall rules and DHCP DNS depend on them (especially Pi-hole `.191`). TODO: pin Pi-hole.
 
 ---
 
@@ -93,7 +184,7 @@ disable:
 | MetalLB | metallb-system | v0.14.9 | Synced | Healthy |
 | Sealed Secrets | sealed-secrets | v0.27.3 | Synced | Healthy |
 | Cert-Manager | cert-manager | v1.17.1 | Synced | Healthy |
-| Pi-hole | pihole | latest | Synced | Healthy |
+| Pi-hole | pihole | 2024.07.0 (v5) | Synced | Healthy |
 | Cloudflare DDNS | cloudflare-ddns | v1.15.1 | Synced | Healthy |
 | WireGuard (wg-easy) | wireguard | v14 | Synced | Healthy |
 | kube-prometheus-stack | monitoring | 70.3.0 (Helm) | Synced | Healthy |
@@ -105,6 +196,14 @@ disable:
 - Ingress: `argocd.vi3t-lab.com` (TLS cert issued, `argocd-tls` secret in argocd namespace)
 - ArgoCD manages itself via `core/argocd/argocd-app.yaml`
 - **Important:** Any changes to `argocd-app.yaml` files require manual re-apply with `--server-side --force-conflicts`
+- **Health check (no web UI needed):** `kubectl get applications -n argocd`
+  - **SYNC STATUS = Unknown on every app** → `argocd-repo-server` is down (it's the part that downloads the repo). Commits will NOT be applied.
+  - Fix: `kubectl get pods -n argocd` → if repo-server is `Unknown`, delete it so the Deployment recreates it:
+```bash
+kubectl delete pod <argocd-repo-server-pod> -n argocd
+# if it hangs: add --force --grace-period=0
+```
+- Force a re-check after a commit: `kubectl annotate application <app> -n argocd argocd.argoproj.io/refresh=hard --overwrite`
 
 ### Sealed Secrets
 - Controller: `sealed-secrets-controller` in `sealed-secrets` namespace
@@ -129,8 +228,14 @@ kubectl create secret generic <secret-name> \
 
 ### Pi-hole
 - Local DNS for `*.vi3t-lab.com` → MetalLB IPs
+- DNS server for **Trusted, IoT** Wi-Fi and **VPN** clients
 - IP: `192.168.30.191`
+- Image: `pihole/pihole:2024.07.0` (Pi-hole **v5** — settings via env vars)
+- Storage: `/etc/pihole` on PVC `pihole-pvc`
 - Web UI: `https://pihole.vi3t-lab.com/admin` (note: must use `/admin` path)
+- **`DNSMASQ_LISTENING: "all"`** set in `apps/pihole/deployment.yaml`
+  - **Why:** default ("local only") refuses queries from other VLANs → phones on TrustMeBro/VIoT got `Query refused` → "limited connectivity." Firewall rules still control who can reach port 53.
+- **Test from desktop:** `nslookup google.com 192.168.30.191` (want an address, not "Query refused" / timeout)
 - **Current local DNS records:**
   - `192.168.30.190 argocd.vi3t-lab.com`
   - `192.168.30.190 pihole.vi3t-lab.com`
@@ -250,15 +355,30 @@ kubectl get configmap homepage-config -n homepage -o jsonpath='{.data.services\.
 
 ---
 
-## Firewall Rules (Ubiquiti)
+## Firewall Rules (UniFi — zone-based)
+> UniFi converted the old rules into zones. Each rule exists in several copies (Hotspot / Vpn / Internal / External). **Only the `Internal → Internal` copy matters for VLAN-to-VLAN traffic** — the rest are harmless clutter (cleanup TODO).
 
 | Rule | Action | Source | Destination | Notes |
 |---|---|---|---|---|
-| Block IoT to Trusted | Drop | 192.168.20.0/24 | 192.168.10.0/24 | IoT isolation |
-| Block IoT to Homelab | Drop | 192.168.20.0/24 | 192.168.30.0/24 | IoT isolation |
-| Block IoT to MGMT | Drop | 192.168.20.0/24 | 192.168.99.0/24 | IoT isolation |
-| Allow Homelab to Trusted Established | Accept | 192.168.30.0/24 | 192.168.10.0/24 | Allows SSH return traffic + DNS responses |
-| Block Homelab to Trusted New | Drop | 192.168.30.0/24 | 192.168.10.0/24 | Blocks unsolicited cluster → PC connections |
+| Block IoT to Trusted | Drop | IoT (192.168.20.0/24) | Trusted (192.168.10.0/24) | IoT isolation |
+| Allow IoT to Jellyfin | Accept | IoT | 192.168.30.65 TCP 8096 | Streaming boxes → Jellyfin |
+| Allow IoT DNS to Pihole | Accept | IoT | **192.168.30.191** TCP/UDP 53 | Fixed 2026-11-17 — was `.190` (Traefik) |
+| Block IoT to Homelab | Drop | IoT | Homelab (192.168.30.0/24) | IoT isolation |
+| Block IoT to MGMT | Drop | IoT | MGMT (192.168.99.0/24) | IoT isolation |
+| Allow Homelab to Trusted Established | Accept | Homelab | Trusted | Allows SSH return traffic + DNS responses |
+| Block Homelab to Trusted New | Drop | Homelab | Trusted | Blocks unsolicited cluster → PC connections |
+| Allow Isolated DHCP | Accept | Isolated | Gateway UDP 67 | Friend's PC can get an IP (must be above the block) |
+| Block Isolated to Gateway | Drop | Isolated | Gateway | Friend's PC can't touch the gateway |
+
+- **Why the IoT DNS fix:** the allow rule pointed at Traefik (.190), so every IoT DNS question hit "Block IoT to Homelab." VIoT had Wi-Fi + internet but no name lookups.
+- Rule ordering matters: Allow rules must sit **above** the matching Block rules.
+
+### QoS (Policy Engine → QoS)
+| Rule | Objective | Source | Interface | Limit |
+|---|---|---|---|---|
+| Limit friend-pc | Limit | Network: Isolated (40) | WAN1 | 200 Mbps down / 10 Mbps up, burst off |
+- **Why:** friend's PC (multiple Android emulators + remote access) could fill the ~22 Mbps upload lane and stall everyone. Cap = safety ceiling, not a squeeze.
+- Smart Queues **not used** — Ubiquiti advises against them above ~300 Mbps (would slow the 500 Mbps download).
 
 ---
 
@@ -302,6 +422,16 @@ k3s-cluster/
 │       ├── cloudflare-api-token-sealed.yaml
 │       └── argocd-app.yaml
 ├── apps/
+│   ├── pihole/
+│   │   ├── namespace.yaml
+│   │   ├── admin-secret-sealed.yaml
+│   │   ├── pvc.yaml
+│   │   ├── deployment.yaml
+│   │   ├── service-dns.yaml
+│   │   ├── service-web.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   └── argocd-app.yaml
 │   ├── cloudflare-ddns/
 │   │   ├── namespace.yaml
 │   │   ├── secret-sealed.yaml
@@ -368,6 +498,47 @@ kubectl apply -f https://raw.githubusercontent.com/tranv1987-hash/k3s-cluster/re
 
 ---
 
+## UniFi Gotchas
+- **Adoption drops right after "Adopt" (Click to Resolve / Connection Interrupted):** a half-finished adoption. Fix: Remove device in UniFi → hold reset pinhole ~10s (LED white) → adopt again.
+- **Device can't find controller** (`info` shows `Unable to resolve (http://unifi:8080/inform)`): SSH in (`ubnt`/`ubnt` after reset) and run `set-inform http://192.168.1.1:8080/inform`.
+- **Port VLAN follows the port, not the device** — after moving any cable, check the new port's Native VLAN.
+- **Client list port/IP can be stale** — trust a physical cable trace or the switch MAC table over UniFi's "connected to" view.
+- **Loops:** never give a switch two paths to the network. RSTP will usually block one, but don't rely on it.
+- **Restarting the gateway** clears stuck DHCP/WAN state but hides the cause — check WAN events and note the time first.
+
+---
+
+## Open Issues / TODO
+- [ ] `local-path-provisioner` in `local-path-storage` namespace is CrashLoopBackOff (35k+ restarts) — looks like a duplicate of the healthy one in `kube-system`
+- [ ] Pin Pi-hole's MetalLB IP to `.191` in its service YAML (firewall + DHCP depend on it)
+- [ ] Remove VLAN 40 (Isolated) from mDNS reflection — gateway leaks the Roku's AirPlay/Spotify announcements into the friend's VLAN
+- [ ] Clean up duplicate zone firewall rules (Hotspot/Vpn/External copies)
+- [ ] Internet drops: keep `ping -t 1.1.1.1` running on wired desktop; on next drop check UniFi WAN events + friend-pc live upload (short time range)
+- [ ] Re-check USW port 13/14 STP anomaly score (flapping seen during swap only)
+- [ ] Confirm which EliteDesk (pve-node1 vs pve-node3) is on USW port 1 vs 5
+- [ ] Ark port forwards (UDP 7777, TCP 27020, UDP 27015) still point at `.245`, which is now **palworld** (CT 103) — update or remove
+- [ ] STP lab with retired TP-Link (two cables USW ↔ TP-Link — never through the gateway)
+
+---
+
+## Change Log
+
+### 2026-11-14 → 2026-11-20 — Network migration + DNS/ArgoCD fixes
+| Change | Why |
+|---|---|
+| Replaced TP-Link TL-SG2210P with UniFi USW-Lite-16-PoE | One dashboard for gateway/switch/AP, PoE for Pis + U7, per-port watts/traffic, free gateway ports |
+| Adopted USW via Trusted network; reset + re-adopt after a broken first adoption | First adoption half-finished after a firmware reboot (scrambled key) |
+| Moved Pis to ports 2/4/6/8 with graceful shutdown | Cleaner cabling to the Pi tray; avoid SD card corruption from cutting PoE |
+| EliteDesks on 1/3/5, U7 on 7 (Trusted + IoT tagged only) | Least privilege on the AP port; retired the small unmanaged PoE switch |
+| ASRock port = native MGMT + tagged Homelab | Proxmox host lives on VLAN 99, containers tag VLAN 30 |
+| Firewall "Allow IoT DNS to Pihole" `.190` → `.191` | Rule pointed at Traefik — VIoT had no DNS |
+| QoS cap on Isolated network (10 up / 200 down) | Protect the small ~22 Mbps upload from the friend's emulator/remote-access traffic |
+| Pi-hole `DNSMASQ_LISTENING: "all"` (GitOps) | Pi-hole was refusing queries from Trusted/IoT → Wi-Fi "limited connectivity" |
+| Deleted stuck `argocd-repo-server` pod (status Unknown) | Repo-server was dead since a node reboot → every app "Unknown", no commits were being applied |
+| Added patch panel + 0.5 ft Cat6 28AWG pure-copper jumpers | Front-facing switch ports; no punch-down; neater runs |
+
+---
+
 ## Chapter Roadmap
 - ✅ **Chapter 1** — Infrastructure Groundwork (ArgoCD, MetalLB, Sealed Secrets, Cert-Manager)
 - ✅ **Chapter 2** — Core Services (Pi-hole + local DNS, WireGuard VPN)
@@ -379,8 +550,8 @@ kubectl apply -f https://raw.githubusercontent.com/tranv1987-hash/k3s-cluster/re
 
 ## Cert Roadmap (Owner)
 - ✅ CompTIA A+ Core 1
-- ⏳ CompTIA A+ Core 2
-- ⏳ CompTIA Network+
+- ⏳ CompTIA A+ Core 2 (will not persue)
+- ⏳ CCNA
 - ⏳ CompTIA Security+
 - ⏳ AWS Cloud Practitioner
 - ⏳ AWS Solutions Architect – Associate
